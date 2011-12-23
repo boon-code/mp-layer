@@ -1,0 +1,497 @@
+# GUIBUILDER FILE Build 146
+# Created: 2011-12-18 02:16:27 by GUI Builder Build 146
+language tkinter 8.4
+widget {Tk frame} f {
+	geometry min_column 803
+	geometry min_row {48 374 39}
+	geometry pad_column 0
+	geometry pad_row {0 0 0}
+	geometry resize_column 3
+	geometry resize_row {0 3 0}
+	geometry weight_column 1
+	geometry weight_row {0 1 0}
+	data GROUP Tk
+	data ID {}
+	data MASTER {}
+	data TYPE {Tk frame}
+	data level 0
+}
+widget {Tk frame} _frame_1 {
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 3
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column {40 40 40}
+	geometry min_row 40
+	geometry pad_column {0 0 0}
+	geometry pad_row 0
+	geometry resize_column {3 0 0}
+	geometry resize_row 0
+	geometry weight_column {1 0 0}
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _frame_1
+	data MASTER {}
+	data TYPE {Tk frame}
+	data level 1
+}
+widget {Tk frame} _frame_2 {
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 2
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column {40 40}
+	geometry min_row 40
+	geometry pad_column {0 0}
+	geometry pad_row 0
+	geometry resize_column {3 0}
+	geometry resize_row 3
+	geometry weight_column {1 0}
+	geometry weight_row 1
+	data GROUP Tk
+	data ID _frame_2
+	data MASTER {}
+	data TYPE {Tk frame}
+	data level 1
+}
+widget {Tk labelframe} _labelframe_3 {
+	configure -text URL
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 3
+	geometry resize_row 0
+	geometry weight_column 1
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _labelframe_3
+	data MASTER {}
+	data TYPE {Tk labelframe}
+	data level 1
+}
+widget {Tk frame} _frame_4 {
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column {40 40}
+	geometry min_row 40
+	geometry pad_column {0 0}
+	geometry pad_row 0
+	geometry resize_column {3 0}
+	geometry resize_row 2
+	geometry weight_column {1 0}
+	geometry weight_row 1
+	data GROUP Tk
+	data ID _frame_4
+	data MASTER _frame_2
+	data TYPE {Tk frame}
+	data level 2
+}
+widget {Tk frame} _frame_5 {
+	geometry -column 2
+	geometry -columnspan 1
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column 40
+	geometry min_row {40 40 40 40 40}
+	geometry pad_column 0
+	geometry pad_row {0 0 0 0 0}
+	geometry resize_column 1
+	geometry resize_row {0 0 0 0 3}
+	geometry weight_column 0
+	geometry weight_row {0 0 0 0 1}
+	data GROUP Tk
+	data ID _frame_5
+	data MASTER _frame_2
+	data TYPE {Tk frame}
+	data level 2
+}
+widget {Tk frame} _frame_6 {
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 3
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column {40 40}
+	geometry min_row 40
+	geometry pad_column {0 0}
+	geometry pad_row 0
+	geometry resize_column {3 3}
+	geometry resize_row 0
+	geometry weight_column {1 1}
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _frSmart
+	data MASTER _frame_5
+	data TYPE {Tk frame}
+	data level 3
+}
+widget {Tk labelframe} _labelframe_4 {
+	configure -text Name
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -padx 5
+	geometry -pady 5
+	geometry -row 2
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _labelframe_4
+	data MASTER _frame_5
+	data TYPE {Tk labelframe}
+	data level 3
+}
+widget {Tk labelframe} _labelframe_5 {
+	configure -text Extension
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 4
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column {40 40}
+	geometry min_row 40
+	geometry pad_column {0 0}
+	geometry pad_row 0
+	geometry resize_column {3 0}
+	geometry resize_row 2
+	geometry weight_column {1 0}
+	geometry weight_row 1
+	data GROUP Tk
+	data ID _labelframe_5
+	data MASTER _frame_5
+	data TYPE {Tk labelframe}
+	data level 3
+}
+widget {Tk labelframe} _labelframe_1 {
+	configure -text Season
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -padx 5
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 3
+	geometry resize_row 0
+	geometry weight_column 1
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _labelframe_1
+	data MASTER _frame_6
+	data TYPE {Tk labelframe}
+	data level 4
+}
+widget {Tk labelframe} _labelframe_2 {
+	configure -text Episode
+	geometry -column 2
+	geometry -columnspan 1
+	geometry -padx 5
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 3
+	geometry resize_row 0
+	geometry weight_column 1
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _labelframe_2
+	data MASTER _frame_6
+	data TYPE {Tk labelframe}
+	data level 4
+}
+widget {Tk text} _text_1 {
+	configure -height 4
+	configure -width 0
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _txtSource
+	data MASTER _labelframe_3
+	data TYPE {Tk text}
+}
+widget {Tk panedwindow} _panedwindow_1 {
+	configure -height 0
+	configure -width 0
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _panedwindow_1
+	data MASTER _frame_1
+	data TYPE {Tk panedwindow}
+}
+widget {Tk button} _button_2 {
+	configure -text Download
+	configure -width 10
+	geometry -column 3
+	geometry -columnspan 1
+	geometry -padx 10
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky {}
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _butDownload
+	data MASTER _frame_1
+	data TYPE {Tk button}
+}
+widget {Tk button} _button_3 {
+	configure -text Cancel
+	configure -width 10
+	geometry -column 2
+	geometry -columnspan 1
+	geometry -padx 10
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky {}
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _butCancel
+	data MASTER _frame_1
+	data TYPE {Tk button}
+}
+widget {Tk scrollbar} _scrollbar_2 {
+	geometry -column 2
+	geometry -columnspan 1
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky ns
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _sclNames
+	data MASTER _frame_4
+	data TYPE {Tk scrollbar}
+}
+widget {Tk listbox} _listbox_2 {
+	configure -height 0
+	configure -width 0
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _lstNames
+	data MASTER _frame_4
+	data TYPE {Tk listbox}
+}
+widget {Tk checkbutton} _checkbutton_1 {
+	configure -text {Smart Naming}
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -padx 5
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky nw
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _chkSmart
+	data MASTER _frame_5
+	data TYPE {Tk checkbutton}
+}
+widget {Tk panedwindow} _panedwindow_2 {
+	configure -height 0
+	configure -width 0
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 5
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _panedwindow_2
+	data MASTER _frame_5
+	data TYPE {Tk panedwindow}
+}
+widget {Tk spinbox} _spinbox_5 {
+	configure -width 10
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky nsew
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _spnSeason
+	data MASTER _labelframe_1
+	data TYPE {Tk spinbox}
+}
+widget {Tk spinbox} _spinbox_6 {
+	configure -width 10
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky nsew
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _spnEpisode
+	data MASTER _labelframe_2
+	data TYPE {Tk spinbox}
+}
+widget {Tk text} _text_2 {
+	configure -height 0
+	configure -width 55
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _txtName
+	data MASTER _labelframe_4
+	data TYPE {Tk text}
+}
+widget {Tk listbox} _listbox_1 {
+	configure -height 4
+	configure -width 0
+	geometry -column 1
+	geometry -columnspan 1
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky news
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _lstExtension
+	data MASTER _labelframe_5
+	data TYPE {Tk listbox}
+}
+widget {Tk scrollbar} _scrollbar_1 {
+	geometry -column 2
+	geometry -columnspan 1
+	geometry -row 1
+	geometry -rowspan 1
+	geometry -sticky ns
+	geometry min_column 40
+	geometry min_row 40
+	geometry pad_column 0
+	geometry pad_row 0
+	geometry resize_column 0
+	geometry resize_row 0
+	geometry weight_column 0
+	geometry weight_row 0
+	data GROUP Tk
+	data ID _sclExtension
+	data MASTER _labelframe_5
+	data TYPE {Tk scrollbar}
+}
+
