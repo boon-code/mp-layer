@@ -1,4 +1,4 @@
-from mpgui import CustomMpgui
+from mpadd import CustomMpadd
 import sys
 
 
@@ -16,7 +16,7 @@ __license__ = 'GPLv3'
 __docformat__ = "restructuredtext en"
 
 
-class Mpgui(CustomMpgui):
+class Mpadd(CustomMpadd):
     
     def __init__(self, controller):
         """Initializes a new instance
