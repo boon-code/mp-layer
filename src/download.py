@@ -1,7 +1,16 @@
-
 from Queue import Queue
 from threading import Thread, RLock
+from subprocess import Popen, PIPE, STDOUT
+from os.path import join
 import logging
+
+
+__author__ = 'Manuel Huber'
+__copyright__ = "Copyright (c) 2011 Manuel Huber."
+__license__ = 'GPLv3'
+__version__ = '0.0.5b'
+__docformat__ = "restructuredtext en"
+
 
 log = logging.getLogger(__name__)
 
@@ -9,9 +18,10 @@ log = logging.getLogger(__name__)
 DOWNLOAD = 1
 EXIT = 2
 
+
 class MPStreamer(object):
     
-    INF_UNKNOWN_CMD = "Unknown command received: %s"
+    INF_UNKNOWN_CMD = "Ignoring unknown command received: '%s'"
     DBG_EXIT_CMD = "Received command exit!"
     
     _id_lock = RLock()
@@ -19,7 +29,6 @@ class MPStreamer(object):
     
     @classmethod
     def nextId(cls):
-        
         _id_lock.acquire()
         try:
             id = _id_lock
@@ -28,24 +37,32 @@ class MPStreamer(object):
         finally:
             _id_lock.release()
     
-    def __init__(self, dl_path, mp_path='mplayer', name="worker"):
+    def __init__(self, dl_path, mp_path="mplayer", name="worker"):
         self._dl = dl_path
         self._mplayer = mp_path
-        self._queue = Queue.Queue
+        self._queue = Queue()
         self._name = "%s_%02d" % (name, self.nextId())
         self._thread = Thread(target=self._workerloop)
         self._log = log
     
     def _workerloop(self):
-        
-        running = True
-        while running:
-            cmd = self._queue.get(True)
-            if cmd[0] == DOWNLOAD:
+        while True:
+            cmd, fname, url = self._queue.get(True)
+            if cmd == DOWNLOAD:
                 pass
-            elif cmd[1] == EXIT:
-                log.debug(
+            elif cmd == EXIT:
+                log.debug(self.DBG_EXIT_CMD)
                 return
             else:
                 log.info(self.INF_UNKNOWN_CMD % str(cmd[0]))
-                
+	
+	def _dl_mplayer(self, fname, url):
+		path = join(self._dl_path, fname)
+		args = [self._mplayer, '-dumpstream', '-dumpfile', path,
+		  '"%s"' % url]
+		process = Popen(args, stdout=PIPE, stderr=STDOUT)
+		
+
+
+if __name__ == '__main__':
+    streamer1 = MPStreamer("../dl")
