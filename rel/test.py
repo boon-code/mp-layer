@@ -20,10 +20,15 @@ class Model(QAbstractListModel):
     
     def changedCurrentIndex(self, sel_index, des_index):
         print "Index changed", sel_index, des_index
-        print "selected item", 
+        print "selected items:", 
         for selitem in sel_index:
             for index in selitem.indexes():
                 print index.row(), 
+        print ""
+        print "deselect items:",
+        for deselitem in des_index:
+            for index in deselitem.indexes():
+                print index.row(),
         print ""
 
 
