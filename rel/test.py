@@ -5,6 +5,11 @@ from PyQt4.QtGui import *
 
 class Model(QAbstractListModel):
     
+    testSig = pyqtSignal()
+    
+    def testSlot(self, *args):
+		print "TestSig caught", args
+    
     def __init__(self, data):
         QAbstractListModel.__init__(self, parent=None)
         self.listdata = data
@@ -50,6 +55,11 @@ class Bla(QWidget):
         print "BOUND", ret
         
         ret = QObject.connect(pb, SIGNAL("clicked()"), sm, SLOT("clearSelection()"))
+        print "BOUND", ret
+        
+        lm.testSig.connect(lm.testSlot)
+        
+        ret = QObject.connect(pb, SIGNAL("clicked()"), lm.testSig)
         print "BOUND", ret
         
         layout = QVBoxLayout()
