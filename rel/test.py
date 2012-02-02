@@ -39,6 +39,8 @@ class Model(QAbstractListModel):
 
 class Bla(QWidget):
     
+    uselessSig = pyqtSignal()
+    
     def __init__(self):
         QWidget.__init__(self)
         
@@ -58,14 +60,21 @@ class Bla(QWidget):
         print "BOUND", ret
         
         lm.testSig.connect(lm.testSlot)
+        QObject.connect(self, SIGNAL("uselessSig()"), lm, SIGNAL("testSig()"))
         
-        ret = QObject.connect(pb, SIGNAL("clicked()"), lm.testSig)
+        ret = QObject.connect(pb, SIGNAL("clicked()"), self, SIGNAL("uselessSig()"))
         print "BOUND", ret
+        
+        #QObject.connect(self, SIGNAL("uselessSig()"), self.test)
+        self.uselessSig.connect(self.test)
         
         layout = QVBoxLayout()
         layout.addWidget(lv)
         layout.addWidget(pb)
         self.setLayout(layout)
+    
+    def test(self, *args):
+        print "Test Trigger"
 
 
 def main():
