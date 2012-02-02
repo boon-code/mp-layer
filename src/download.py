@@ -2,21 +2,37 @@ from Queue import Queue
 from threading import Thread, RLock
 from subprocess import Popen, PIPE, STDOUT
 from os.path import join
+from PyQt4.QtCore import QObject
 import logging
 
 
 __author__ = 'Manuel Huber'
 __copyright__ = "Copyright (c) 2011 Manuel Huber."
 __license__ = 'GPLv3'
-__version__ = '0.0.5b'
+__version__ = '0.0.0'
 __docformat__ = "restructuredtext en"
 
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 DOWNLOAD = 1
 EXIT = 2
+
+
+class DownloadInfo(QObject):
+    
+    succeeded = pyqtSignal()
+    
+    def __init__(self, url, filename):
+        self._url = url
+        self._fname = filename
+    
+    def getSourceURL(self):
+        return self._url
+    
+    def getFilename(self):
+        return self._fname
 
 
 class MPStreamer(object):
@@ -43,7 +59,7 @@ class MPStreamer(object):
         self._queue = Queue()
         self._name = "%s_%02d" % (name, self.nextId())
         self._thread = Thread(target=self._workerloop)
-        self._log = log
+        self._log = _log
     
     def _workerloop(self):
         while True:
