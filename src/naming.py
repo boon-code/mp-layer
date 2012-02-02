@@ -14,5 +14,24 @@ _log = logging.getLogger(__name__)
 
 class SeriesInstance(DownloadInfo):
     
-    def __init__(self, series, season, episode):
-        DownloadInfo.__init__(self, 
+    _TNAME = "%s.S%2dE%2d"
+    _DBG_SUCCESS = "Download of file '%s' has been successful."
+    
+    def __init__(self, url, series, season, episode):
+        filename = self._TNAME % (series.name, season, episode)
+        DownloadInfo.__init__(self, url, filename)
+        self._series = series
+        self._episode = episode
+        self._season = season
+    
+    def hasSucceeceded(self):
+        _log.debug(self._DBG_SUCCESS % self.getFilename())
+        self._series.addToHistory(self._season, self._episode)
+
+class Series(object):
+    
+    def __init__(self, name, curr_season=1, curr_episode=0):
+        self.name = name
+        self.currentSeason = curr_season
+        self.currentEpisode = curr_episode
+        self.accessPriority = 0

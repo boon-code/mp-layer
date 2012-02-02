@@ -26,13 +26,13 @@ class DownloadInfo(QObject):
     
     def __init__(self, url, filename):
         self._url = url
-        self._fname = filename
+        self._filename = filename
     
     def getSourceURL(self):
         return self._url
     
     def getFilename(self):
-        return self._fname
+        return self._filename
 
 
 class MPStreamer(object):
@@ -59,7 +59,6 @@ class MPStreamer(object):
         self._queue = Queue()
         self._name = "%s_%02d" % (name, self.nextId())
         self._thread = Thread(target=self._workerloop)
-        self._log = _log
     
     def _workerloop(self):
         while True:
@@ -67,10 +66,10 @@ class MPStreamer(object):
             if cmd == DOWNLOAD:
                 pass
             elif cmd == EXIT:
-                log.debug(self.DBG_EXIT_CMD)
+                _log.debug(self.DBG_EXIT_CMD)
                 return
             else:
-                log.info(self.INF_UNKNOWN_CMD % str(cmd[0]))
+                _log.info(self.INF_UNKNOWN_CMD % str(cmd[0]))
 	
 	def _dl_mplayer(self, fname, url):
 		path = join(self._dl_path, fname)
