@@ -1,4 +1,5 @@
-from PyQt4.QtCore import QObject
+from PyQt4.QtCore import (QObject, SIGNAL, SLOT, pyqtSlot, 
+                          pyqtSlot)
 from download import DownloadInfo
 import logging
 
@@ -12,6 +13,16 @@ __docformat__ = "restructuredtext en"
 _log = logging.getLogger(__name__)
 
 
+
+
+
+
+
+
+
+
+
+
 class SeriesInstance(DownloadInfo):
     
     _TNAME = "%s.S%2dE%2d"
@@ -23,8 +34,12 @@ class SeriesInstance(DownloadInfo):
         self._series = series
         self._episode = episode
         self._season = season
+        self.succeeded.connect(self.hasSucceeded)
+        QObject.connect(self, SIGNAL("succeeded()"),
+                        self.hasSucceeded)
     
-    def hasSucceeceded(self):
+    @pyqtSlot()
+    def hasSucceeded(self):
         _log.debug(self._DBG_SUCCESS % self.getFilename())
         self._series.addToHistory(self._season, self._episode)
 
@@ -35,3 +50,11 @@ class Series(object):
         self.currentSeason = curr_season
         self.currentEpisode = curr_episode
         self.accessPriority = 0
+        self._history = dict()
+    
+    def createInstance(self, url, season, episode):
+        inst = SeriesInstance(url, self, season, episode)
+        
+import naming as n
+s=n.Series("Onkel-Charlie")
+a=s.createInstance("url://somewhere", 1, 1)

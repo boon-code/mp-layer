@@ -2,7 +2,7 @@ from Queue import Queue
 from threading import Thread, RLock
 from subprocess import Popen, PIPE, STDOUT
 from os.path import join
-from PyQt4.QtCore import QObject
+from PyQt4.QtCore import QObject, pyqtSignal
 import logging
 
 
@@ -25,6 +25,7 @@ class DownloadInfo(QObject):
     succeeded = pyqtSignal()
     
     def __init__(self, url, filename):
+        QObject.__init__(self)
         self._url = url
         self._filename = filename
     
