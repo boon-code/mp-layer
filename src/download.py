@@ -8,7 +8,7 @@ import logging
 
 __author__ = 'Manuel Huber'
 __copyright__ = "Copyright (c) 2011 Manuel Huber."
-__license__ = 'GPLv3'
+__license__ = 'GPLv2'
 __version__ = '0.0.0'
 __docformat__ = "restructuredtext en"
 
