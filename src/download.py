@@ -71,13 +71,13 @@ class MPStreamer(object):
                 return
             else:
                 _log.info(self.INF_UNKNOWN_CMD % str(cmd[0]))
-	
-	def _dl_mplayer(self, fname, url):
-		path = join(self._dl_path, fname)
-		args = [self._mplayer, '-dumpstream', '-dumpfile', path,
-		  '"%s"' % url]
-		process = Popen(args, stdout=PIPE, stderr=STDOUT)
-		
+    
+    def _dl_mplayer(self, fname, url):
+        path = join(self._dl_path, fname)
+        args = [self._mplayer, '-dumpstream', '-dumpfile', path,
+          '"%s"' % url]
+        process = Popen(args, stdout=PIPE, stderr=STDOUT)
+        
 
 
 if __name__ == '__main__':

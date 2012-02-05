@@ -76,10 +76,10 @@ class Series(object):
                        % (season, self.name))
             self._history[season] = set()
         if episode in self._history[season]:
-            _log.debug("'%s.S%02d.E%02d' already in history"
+            _log.debug("'%s.S%02dE%02d' already in history"
                        % (self.name, season, episode))
         else:
-            _log.debug("Adding '%s.S%02d.E%02d' to history"
+            _log.debug("Adding '%s.S%02dE%02d' to history"
                        % (self.name, season, episode))
             self._history[season].add(episode)
     
@@ -89,51 +89,49 @@ class Series(object):
                 raise WrongJSOError("%s.last" % self.name,
                                     type(obj['last']))
             last = (obj['last'][0], obj['last'][1])
-            if (not isinstance(last[0], int):
+            if not isinstance(last[0], int):
                 raise WrongJSOError("%s.last[0](season)" % self.name,
                                     type(last[0]))
-            elif (not isinstance(last[1], int):
+            elif not isinstance(last[1], int):
                 raise WrongJSOError("%s.last[1](episode)" % self.name,
                                     type(last[1]))
             else:
                 return last
     
     def _mergeHistory(self, history):
-		for (season, epilist) in history.items():
-			try:
-				season = int(season)
-			except TypeError as ex:
-				_log.debug(self._DBG_SKIP % str(ex))
-				_log.warning(self._WRN_ILLSEASON % str(season))
-				continue
-			try:
-				epi = set((int(i) for i in epilist))
-			except TypeError as ex:
-				_log.debug(self._DBG_SKIP % str(ex))
-				_log.warning(self._WRN_LDSKIP % (season, self.name))
-				continue
-			if season not in self._history:
-				_log.debug("Adding full season %d (series: '%s')."
-						   % (season, self.name))
-				self._history[season] = epi
-			else:
-				diff = self._history[season].difference(epi)
-				_log.debug("Adding [%s] (season: %d, series: '%s')."
-						   % (", ".join((str(i) for i in diff)),
-							  season, self.name))
-				self._history[season].update(diff)
+        for (season, epilist) in history.items():
+            try:
+                season = int(season)
+            except TypeError as ex:
+                _log.debug(self._DBG_SKIP % str(ex))
+                _log.warning(self._WRN_ILLSEASON % str(season))
+                continue
+            try:
+                epi = set((int(i) for i in epilist))
+            except TypeError as ex:
+                _log.debug(self._DBG_SKIP % str(ex))
+                _log.warning(self._WRN_LDSKIP % (season, self.name))
+                continue
+            if season not in self._history:
+                _log.debug("Adding full season %d (series: '%s')."
+                           % (season, self.name))
+                self._history[season] = epi
+            else:
+                diff = self._history[season].difference(epi)
+                _log.debug("Adding [%s] (season: %d, series: '%s')."
+                           % (", ".join((str(i) for i in diff)),
+                              season, self.name))
+                self._history[season].update(diff)
     
     def mergeData(self, data):
-        
-		try:
-            last = self._tryLoadLast(data)
+        try:
+            self._tryLoadLast(data)
             self.currentSeason = last[0]
             self.currentEpisode = last[1]
         except WrongJSOError as ex:
-            _log.warning(self._WRN_LAST % (str(ex.name), str(ex.wtype))
-		
-		if 'history' in data:
-			history = data['history']
+            _log.warning(self._WRN_LAST % (str(ex.name), str(ex.wtype)))
+        if 'history' in data:
+            history = data['history']
             if not isinstance(history, dict):
                 raise WrongJSOError("%s.history" % self.name,
                                     type(history))
@@ -144,9 +142,6 @@ class Series(object):
         obj['history'] = copy.deepcopy(self._history)
         obj['last'] = (self.currentSeason, self.currentEpisode)
         return obj
-    
-    def hasHistory(self):
-        return (len(self._history.keys()) > 0)
 
 
 class SeriesStorage(QAbstractListModel):
@@ -190,7 +185,7 @@ class SeriesStorage(QAbstractListModel):
         jobj = dict()
         for series in self._series:
             jobj[series.name] = series.getData()
-        with open(path, "w") as f:
+        with open(path, 'w') as f:
             json.dump(self._series, f)
     
     def get(self, index):
