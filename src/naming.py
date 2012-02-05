@@ -84,7 +84,6 @@ class Series(object):
             self._history[season].add(episode)
     
     def _tryLoadLast(self, obj):
-        
         if 'last' in obj:
             if not isinstance(obj['last'], list):
                 raise WrongJSOError("%s.last" % self.name,
@@ -100,10 +99,6 @@ class Series(object):
                 return last
     
     def _mergeHistory(self, history):
-		if not isinstance(history, dict):
-			raise WrongJSOError("%s.history" % self.name,
-								type(history))
-		
 		for (season, epilist) in history.items():
 			try:
 				season = int(season)
@@ -129,8 +124,7 @@ class Series(object):
 				self._history[season].update(diff)
     
     def mergeData(self, data):
-		if not isinstance(data, dict):
-			raise WrongJSOError(self.name, type(self.name))
+        
 		try:
             last = self._tryLoadLast(data)
             self.currentSeason = last[0]
@@ -140,10 +134,19 @@ class Series(object):
 		
 		if 'history' in data:
 			history = data['history']
-			
+            if not isinstance(history, dict):
+                raise WrongJSOError("%s.history" % self.name,
+                                    type(history))
+            self._mergeHistory(history)
     
     def getData(self):
-        return copy.deepcopy(self._history)
+        obj = dict()
+        obj['history'] = copy.deepcopy(self._history)
+        obj['last'] = (self.currentSeason, self.currentEpisode)
+        return obj
+    
+    def hasHistory(self):
+        return (len(self._history.keys()) > 0)
 
 
 class SeriesStorage(QAbstractListModel):
@@ -152,34 +155,23 @@ class SeriesStorage(QAbstractListModel):
     
     def __init__(self):
         QAbstractListModel.__init__(self, None)
-        self._series = dict()
+        self._series = list()
+        self._idbyname = dict()
+    
+    def _addSeries(self, name):
+        series = Series(name)
+        self._series.append(series)
+        self._idbyname[name] = self._series.index(series)
+        return series
     
     def _loadFile(self, path):
         with open(path, 'r') as f:
             return json.load(f)
     
-    def _tryLoadEntry(self, name, obj):
-        
-        last = None
-        
-        
-        if 'history' in obj:
-            if not isinstance(obj['history'], dict):
-                raise WrongJSOError("%s.history" % name,
-                                    type(obj['history']))
-            if name in self._series:
-                self._series[name].mergeData(obj['history'])
-            else:
-                self._series[name] = Series(name)
-        if last is not None:
-            self._series[name].currentSeason = last[0]
-            self._series[name].currentEpisode = last[1]
-    
     def load(self, path):
         jobj = self._loadFile(path)
         if not isinstance(jobj, dict):
             raise WrongJSOError("root", type(jobj))
-        
         for (name, obj) in jobj.items():
             try:
                 if not isinstance(name, str):
@@ -187,34 +179,44 @@ class SeriesStorage(QAbstractListModel):
                 if not isinstance(obj, dict):
                     raise WrongJSOError(name, type(obj))
                 
-                self._tryLoadEntry(name, obj)
+                if name not in self._idbyname:
+                    self._addSeries(name)
+                self.mergeData(obj)
             except WrongJSOError as ex:
                 _log.warning(self._WRN_SKIPENTRY % (str(ex.name),
                                                     str(ex.wtype)))
     
     def store(self, path):
         jobj = dict()
-        for (name, series) in self._series:
-			data = dict()
-			data['history'] = series.getData()
-			jobj[series.name] = dict()
+        for series in self._series:
+            jobj[series.name] = series.getData()
         with open(path, "w") as f:
             json.dump(self._series, f)
     
     def get(self, index):
-        pass
+        if index.isValid():
+            return self._series[index.row()]
     
     def find(self, name):
-        return (False, None)
+        if name in self._idbyname:
+            return (True, self._series[self._idbyname[name]])
+        else:
+            return (False, None)
     
     def getOrCreateSeries(self, name):
-        pass
+        if name in self._idbyname:
+            return self._series[self._idbyname[name]]
+        else:
+            return self._addSeries(name)
     
     def data(self, index, role):
-        pass
+        if index.isValid() and role == Qt.DisplayRole:
+            return QVariant(self._series[index.row()].name)
+        else:
+            return QVariant()
     
     def rowCount(self, parent=QModelIndex()):
-        pass
+        return len(self._series)
     
     
     
