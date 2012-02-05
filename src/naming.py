@@ -53,6 +53,8 @@ class Series(object):
     
     _WRN_LDSKIP = "Skipping season %d (series: '%s'); Illegal list format."
     _WRN_ILLSEASON = "Skipping illegal season value '%s'"
+    _WRN_LAST = "Couldn't load last season, episode from '%s' \
+(found type '%s')."
     _DBG_SKIP = "Skipping cause of exception '%s'."
     
     def __init__(self, name, curr_season=1, curr_episode=0):
@@ -81,30 +83,64 @@ class Series(object):
                        % (self.name, season, episode))
             self._history[season].add(episode)
     
-    def mergeData(self, data):
-        for (season, epilist) in data.items():
-            try:
-                season = int(season)
-            except TypeError as ex:
-                _log.debug(self._DBG_SKIP % str(ex))
-                _log.warning(self._WRN_ILLSEASON % str(season))
-                continue
-            try:
-                epi = set((int(i) for i in epilist))
-            except TypeError as ex:
-                _log.debug(self._DBG_SKIP % str(ex))
-                _log.warning(self._WRN_LDSKIP % (season, self.name))
-                continue
-            if season not in self._history:
-                _log.debug("Adding full season %d (series: '%s')."
-                           % (season, self.name))
-                self._history[season] = epi
+    def _tryLoadLast(self, obj):
+        
+        if 'last' in obj:
+            if not isinstance(obj['last'], list):
+                raise WrongJSOError("%s.last" % self.name,
+                                    type(obj['last']))
+            last = (obj['last'][0], obj['last'][1])
+            if (not isinstance(last[0], int):
+                raise WrongJSOError("%s.last[0](season)" % self.name,
+                                    type(last[0]))
+            elif (not isinstance(last[1], int):
+                raise WrongJSOError("%s.last[1](episode)" % self.name,
+                                    type(last[1]))
             else:
-                diff = self._history[season].difference(epi)
-                _log.debug("Adding [%s] (season: %d, series: '%s')."
-                           % (", ".join((str(i) for i in diff)),
-                              season, self.name))
-                self._history[season].update(diff)
+                return last
+    
+    def _mergeHistory(self, history):
+		if not isinstance(history, dict):
+			raise WrongJSOError("%s.history" % self.name,
+								type(history))
+		
+		for (season, epilist) in history.items():
+			try:
+				season = int(season)
+			except TypeError as ex:
+				_log.debug(self._DBG_SKIP % str(ex))
+				_log.warning(self._WRN_ILLSEASON % str(season))
+				continue
+			try:
+				epi = set((int(i) for i in epilist))
+			except TypeError as ex:
+				_log.debug(self._DBG_SKIP % str(ex))
+				_log.warning(self._WRN_LDSKIP % (season, self.name))
+				continue
+			if season not in self._history:
+				_log.debug("Adding full season %d (series: '%s')."
+						   % (season, self.name))
+				self._history[season] = epi
+			else:
+				diff = self._history[season].difference(epi)
+				_log.debug("Adding [%s] (season: %d, series: '%s')."
+						   % (", ".join((str(i) for i in diff)),
+							  season, self.name))
+				self._history[season].update(diff)
+    
+    def mergeData(self, data):
+		if not isinstance(data, dict):
+			raise WrongJSOError(self.name, type(self.name))
+		try:
+            last = self._tryLoadLast(data)
+            self.currentSeason = last[0]
+            self.currentEpisode = last[1]
+        except WrongJSOError as ex:
+            _log.warning(self._WRN_LAST % (str(ex.name), str(ex.wtype))
+		
+		if 'history' in data:
+			history = data['history']
+			
     
     def getData(self):
         return copy.deepcopy(self._history)
@@ -112,8 +148,6 @@ class Series(object):
 
 class SeriesStorage(QAbstractListModel):
     
-    _WRN_LAST = "Couldn't load last season, episode from '%s' \
-(found type '%s')."
     _WRN_SKIPENTRY = "Skipped entry because of '%s' (having type '%s')."
     
     def __init__(self):
@@ -124,29 +158,10 @@ class SeriesStorage(QAbstractListModel):
         with open(path, 'r') as f:
             return json.load(f)
     
-    def _tryLoadLast(self, name, obj):
-        
-        if 'last' in obj:
-            if not isinstance(obj['last'], list):
-                raise WrongJSOError("%s.last" % name,
-                                    type(obj['last']))
-            last = (obj['last'][0], obj['last'][1])
-            if (not isinstance(last[0], int):
-                raise WrongJSOError("%s.last[0](season)" % name,
-                                    type(last[0]))
-            elif (not isinstance(last[1], int):
-                raise WrongJSOError("%s.last[1](episode)" % name,
-                                    type(last[1]))
-            else:
-                return last
-    
     def _tryLoadEntry(self, name, obj):
         
         last = None
-        try:
-            last = self._tryLoadLast(name, obj)
-        except WrongJSOError as ex:
-            _log.warning(self._WRN_LAST % (str(ex.name), str(ex.wtype))
+        
         
         if 'history' in obj:
             if not isinstance(obj['history'], dict):
@@ -179,9 +194,10 @@ class SeriesStorage(QAbstractListModel):
     
     def store(self, path):
         jobj = dict()
-        # TODO: continue here!
         for (name, series) in self._series:
-            pass
+			data = dict()
+			data['history'] = series.getData()
+			jobj[series.name] = dict()
         with open(path, "w") as f:
             json.dump(self._series, f)
     
