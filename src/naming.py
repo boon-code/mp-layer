@@ -212,8 +212,3 @@ class SeriesStorage(QAbstractListModel):
     
     def rowCount(self, parent=QModelIndex()):
         return len(self._series)
-    
-    
-    
-    
-

@@ -36,6 +36,25 @@ class DownloadInfo(QObject):
         return self._filename
 
 
+class DownloadList(QAbstractListModel):
+	
+	def __init__(self, downloadPath, autostart=True):
+		self.dlpath = downloadPath
+		self.autostart = autostart
+	
+	def add(self, dlinfo):
+		pass
+	
+	def remove(self, index):
+		pass
+	
+	def kill(self, index):
+		pass
+	
+	def getStreamer(self, index):
+		pass
+
+
 class MPStreamer(object):
     
     INF_UNKNOWN_CMD = "Ignoring unknown command received: '%s'"
