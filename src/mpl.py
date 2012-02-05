@@ -15,43 +15,43 @@ _DEFAULT_LOG_FORMAT = "%(name)s : %(threadName)s : %(levelname)s \
 
 
 class Controller(QObject):
-	
-	nextEpisode = pyqtSignal(int)
-	currentSeason = pyqtSignal(int)
-	
-	def __init__(self):
-		QObject.__init__(self)
-	
-	def convertName(self, name, isEpisode=False):
-		pass
-	
-	@pyqtSlot(str)
-	def changedEpisodeName(self, text):
-		pass
-	
-	@pyqtSlot()
-	def addEpisode(self):
-		pass
-	
-	@pyqtSlot()
-	def addSimple(self):
-		pass
-	
-	@pyqtSlot(QItemSelection, QItemSelection)
-	def selectedDownloadChanged(self, selected, deselected):
-		pass
-	
-	@pyqtSlot(QItemSelection, QItemSelection)
-	def selectedSeriesChanged(self, selected, deselected):
-		pass
-	
-	@pyqtSlot(int)
-	def userChangedEpisode(self, number):
-		pass
-	
-	@pyqtSlot(int)
-	def userChangedSeason(self, number):
-		pass
+    
+    nextEpisode = pyqtSignal(int)
+    currentSeason = pyqtSignal(int)
+    
+    def __init__(self):
+        QObject.__init__(self)
+    
+    def convertName(self, name, isEpisode=False):
+        pass
+    
+    @pyqtSlot(str)
+    def changedEpisodeName(self, text):
+        pass
+    
+    @pyqtSlot()
+    def addEpisode(self):
+        pass
+    
+    @pyqtSlot()
+    def addSimple(self):
+        pass
+    
+    @pyqtSlot(QItemSelection, QItemSelection)
+    def selectedDownloadChanged(self, selected, deselected):
+        pass
+    
+    @pyqtSlot(QItemSelection, QItemSelection)
+    def selectedSeriesChanged(self, selected, deselected):
+        pass
+    
+    @pyqtSlot(int)
+    def userChangedEpisode(self, number):
+        pass
+    
+    @pyqtSlot(int)
+    def userChangedSeason(self, number):
+        pass
 
 
 def main():
