@@ -39,9 +39,12 @@ class SeriesInstance(DownloadInfo):
         filename = self._TNAME % (series.name, season, episode)
         DownloadInfo.__init__(self, url, filename)
         self._series = series
-        self._episode = episode
-        self._season = season
+        self.episode = episode
+        self.season = season
         self.succeeded.connect(self.hasSucceeded)
+    
+    def getName(self):
+        return self._series.name
     
     @pyqtSlot()
     def hasSucceeded(self):

@@ -19,6 +19,58 @@ import download
 DL_PATH = ""
 
 
+class EpisodeController(QObject):
+    
+    nextEpisode = pyqtSignal(int)
+    currentSeason = pyqtSignal(int)
+    
+    def __init__(self, ui):
+        QObject.__init__(self)
+        # ui elements:
+        #ui.ledEName
+        #ui.ledTitle
+        #ui.spnSeason
+        #ui.spnEpisode
+        #ui.pubAddEpisode
+        #ui.lvSeries
+        #ui.pteUrl
+        # member:
+        self._ui = ui
+    
+    def doConnections(self):
+        ui = self._ui
+        QObject.connect(ui.ledEName, SIGNAL("textChanged(QString)"),
+                        self.changedEpisodeName)
+        QObject.connect(ui.spnEpisode, SIGNAL("valueChanged(int)"),
+                        self.changedEpisodeNr)
+        QObject.connect(ui.spnSeason, SIGNAL("valueChanged(int)"),
+                        self.changedSeasonNr)
+        QObject.connect(ui.pubAddEpisode, SIGNAL("clicked()"),
+                        self.addEpisode)
+        
+    @pyqtSlot(QString)
+    def changedEpisodeName(self, text):
+        self.update()
+    
+    @pyqtSlot(int)
+    def changedEpisodeNr(self, number):
+        pass
+    
+    @pyqtSlot(int)
+    def changedSeasonNr(self, number):
+        pass
+    
+    @pyqtSlot()
+    def addEpisode(self):
+        pass
+    
+    def update(self):
+        ui = self._ui
+        enabled = True
+        if ui.ledEName.text().isEmpty():
+            enabled = False
+        ui.pubAddEpisode.addEpisode.setEnabled(enabled)
+
 class Controller(QObject):
     
     nextEpisode = pyqtSignal(int)
@@ -31,13 +83,11 @@ class Controller(QObject):
         self._ui.setupUi(self._gui)
         self._dlList = download.DownloadList(dl_path)
         self._nameStorage = naming.SeriesStorage()
+        self._epiController = EpisodeController(self._ui)
         self._doConnections()
     
     def _doConnections(self):
-        ui = self._ui
-        QObject.connect(ui.ledEName, SIGNAL("textEdited(QString)"),
-            self, SLOT("changedEpisodeName(QString)"))
-        
+        self._epiController.doConnections()
     
     def show(self):
         self._gui.show()
@@ -47,11 +97,14 @@ class Controller(QObject):
     
     @pyqtSlot(QString)
     def changedEpisodeName(self, text):
+        
         print "changed:", text
     
     @pyqtSlot()
     def addEpisode(self):
-        pass
+        uiName = self._ui.ledEName
+        series = self._nameStorage.getOrCreateSeries(uiName.text())
+        print series.name
     
     @pyqtSlot()
     def addSimple(self):
