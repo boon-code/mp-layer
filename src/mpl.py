@@ -24,7 +24,7 @@ class EpisodeController(QObject):
     nextEpisode = pyqtSignal(int)
     currentSeason = pyqtSignal(int)
     
-    def __init__(self, ui):
+    def __init__(self, ui, dl_list, name_storage):
         QObject.__init__(self)
         # ui elements:
         #ui.ledEName
@@ -35,7 +35,11 @@ class EpisodeController(QObject):
         #ui.lvSeries
         #ui.pteUrl
         # member:
+        self._nameStorage = name_storage
+        self._dlList = dl_list
         self._ui = ui
+        ui.lvSeries.setModel(self._nameStorage)
+        self._selModel = ui.lvSeries.selectionModel()
     
     def doConnections(self):
         ui = self._ui
@@ -47,7 +51,24 @@ class EpisodeController(QObject):
                         self.changedSeasonNr)
         QObject.connect(ui.pubAddEpisode, SIGNAL("clicked()"),
                         self.addEpisode)
-        
+        QObject.connect(self._selModel,
+                        SIGNAL("selectionChanged(QItemSelection, QItemSelection)"),
+                        self.selectedEpisodeChanged)
+    
+    @pyqtSlot()
+    def selectedEpisodeChanged(self, sel, dsl):
+        print "Index changed", sel_index, des_index
+        print "selected items:", 
+        for selitem in sel_index:
+            for index in selitem.indexes():
+                print index.row(), 
+        print ""
+        print "deselect items:",
+        for deselitem in des_index:
+            for index in deselitem.indexes():
+                print index.row(),
+        print ""
+    
     @pyqtSlot(QString)
     def changedEpisodeName(self, text):
         self.update()
@@ -71,6 +92,7 @@ class EpisodeController(QObject):
             enabled = False
         ui.pubAddEpisode.addEpisode.setEnabled(enabled)
 
+
 class Controller(QObject):
     
     nextEpisode = pyqtSignal(int)
@@ -83,7 +105,8 @@ class Controller(QObject):
         self._ui.setupUi(self._gui)
         self._dlList = download.DownloadList(dl_path)
         self._nameStorage = naming.SeriesStorage()
-        self._epiController = EpisodeController(self._ui)
+        self._epiController = EpisodeController(self._ui, self._dlList,
+                                                self._nameStorage)
         self._doConnections()
     
     def _doConnections(self):
