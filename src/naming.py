@@ -1,4 +1,4 @@
-from PyQt4.QtCore import (QObject, SIGNAL, SLOT, pyqtSlot, 
+from PyQt4.QtCore import (QObject, SIGNAL, SLOT, pyqtSignal, 
                           pyqtSlot, QAbstractListModel, QModelIndex)
 from download import DownloadInfo
 import logging

@@ -3,15 +3,18 @@
 import sys
 import logging
 
-from PyQt4.QtCore import (QObject, SIGNAL, SLOT, pyqtSlot, 
-                          pyqtSlot)
-from PyQt4.QtGui import QItemSelection
-import naming
-import download
-
-
 _DEFAULT_LOG_FORMAT = "%(name)s : %(threadName)s : %(levelname)s \
 : %(message)s"
+logging.basicConfig(stream=sys.stderr, format=_DEFAULT_LOG_FORMAT
+     , level=logging.DEBUG)
+
+from PyQt4.QtCore import (QObject, SIGNAL, SLOT, pyqtSlot, 
+                          pyqtSignal)
+from PyQt4.QtGui import (QItemSelection, QMainWindow, QApplication)
+from PyQt4 import QtGui
+from gui import Ui_MPLayerGui
+import naming
+import download
 
 
 class Controller(QObject):
@@ -21,8 +24,14 @@ class Controller(QObject):
     
     def __init__(self):
         QObject.__init__(self)
+        self._gui = QMainWindow()
+        ui = Ui_MPLayerGui()
+        ui.setupUi(self._gui)
     
-    def convertName(self, name, isEpisode=False):
+    def show(self):
+        self._gui.show()
+    
+    def convertName(self, name, is_episode=False):
         pass
     
     @pyqtSlot(str)
@@ -55,7 +64,15 @@ class Controller(QObject):
 
 
 def main():
-    pass
+    app = QApplication(sys.argv)
+    QtGui.qApp = app
+    c = Controller()
+    c.show()
+    ret = app.exec_()
+    del c
+    del app
+    sys.exit(ret)
+    
 
 
 if __name__ == '__main__':

@@ -1,9 +1,9 @@
+import logging
 from Queue import Queue
 from threading import Thread, RLock
 from subprocess import Popen, PIPE, STDOUT
 from os.path import join
-from PyQt4.QtCore import QObject, pyqtSignal
-import logging
+from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel)
 
 
 __author__ = 'Manuel Huber'
@@ -38,12 +38,15 @@ class DownloadInfo(QObject):
 
 class DownloadList(QAbstractListModel):
     
-    def __init__(self, downloadPath, autostart=True):
-        self.dlpath = downloadPath
-        self.autostart = autostart
+    def __init__(self, dl_path, autostart=True):
+        self._dlpath = dl_path
+        self._autostart = autostart
+        self._dllist = list()
+        self._set
     
     def add(self, dlinfo):
-        pass
+        path = join(self._dlpath, dlinfo.getFilename())
+        
     
     def remove(self, index):
         pass

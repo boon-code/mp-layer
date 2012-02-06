@@ -697,7 +697,7 @@
         <dia:point val="18.9501,2"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="18.9001,1.95;42.6001,15.05"/>
+        <dia:rectangle val="18.9001,1.95;42.6001,15.85"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
         <dia:point val="18.9501,2"/>
@@ -706,7 +706,7 @@
         <dia:real val="23.600000000000001"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
-        <dia:real val="13"/>
+        <dia:real val="13.800000000000001"/>
       </dia:attribute>
       <dia:attribute name="name">
         <dia:string>#Controller#</dia:string>
@@ -892,7 +892,7 @@
             </dia:composite>
             <dia:composite type="umlparameter">
               <dia:attribute name="name">
-                <dia:string>#isEpisode#</dia:string>
+                <dia:string>#is_episode#</dia:string>
               </dia:attribute>
               <dia:attribute name="type">
                 <dia:string>##</dia:string>
@@ -1339,6 +1339,36 @@
             </dia:composite>
           </dia:attribute>
         </dia:composite>
+        <dia:composite type="umloperation">
+          <dia:attribute name="name">
+            <dia:string>#show#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="stereotype">
+            <dia:string>##</dia:string>
+          </dia:attribute>
+          <dia:attribute name="type">
+            <dia:string>##</dia:string>
+          </dia:attribute>
+          <dia:attribute name="visibility">
+            <dia:enum val="0"/>
+          </dia:attribute>
+          <dia:attribute name="comment">
+            <dia:string>##</dia:string>
+          </dia:attribute>
+          <dia:attribute name="abstract">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+          <dia:attribute name="inheritance_type">
+            <dia:enum val="2"/>
+          </dia:attribute>
+          <dia:attribute name="query">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+          <dia:attribute name="class_scope">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+          <dia:attribute name="parameters"/>
+        </dia:composite>
       </dia:attribute>
       <dia:attribute name="template">
         <dia:boolean val="false"/>
@@ -1642,16 +1672,16 @@
         <dia:boolean val="false"/>
       </dia:attribute>
       <dia:attribute name="obj_pos">
-        <dia:point val="18.9501,15"/>
+        <dia:point val="18.9501,15.8"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="18.2001,14.25;23.95,39.5"/>
+        <dia:rectangle val="18.2001,15.05;23.95,39.5"/>
       </dia:attribute>
       <dia:attribute name="meta">
         <dia:composite type="dict"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="18.9501,15"/>
+        <dia:point val="18.9501,15.8"/>
         <dia:point val="18.9501,38.7"/>
         <dia:point val="23.9,38.7"/>
       </dia:attribute>
@@ -1822,16 +1852,16 @@
         <dia:boolean val="false"/>
       </dia:attribute>
       <dia:attribute name="obj_pos">
-        <dia:point val="30.7501,15"/>
+        <dia:point val="30.7501,15.8"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="30.0001,14.25;46.885,19.75"/>
+        <dia:rectangle val="30.0001,15.05;46.885,19.75"/>
       </dia:attribute>
       <dia:attribute name="meta">
         <dia:composite type="dict"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="30.7501,15"/>
+        <dia:point val="30.7501,15.8"/>
         <dia:point val="30.7501,17.85"/>
         <dia:point val="42.45,17.85"/>
         <dia:point val="42.45,19.7"/>
