@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './qt4-layout/gui.ui'
 #
-# Created: Mon Feb  6 11:24:20 2012
+# Created: Mon Feb  6 16:12:59 2012
 #      by: PyQt4 UI code generator 4.7.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PyQt4 import QtCore, QtGui
 class Ui_MPLayerGui(object):
     def setupUi(self, MPLayerGui):
         MPLayerGui.setObjectName("MPLayerGui")
-        MPLayerGui.resize(893, 626)
+        MPLayerGui.resize(915, 600)
         self.centralwidget = QtGui.QWidget(MPLayerGui)
         self.centralwidget.setObjectName("centralwidget")
         self.horizontalLayout_5 = QtGui.QHBoxLayout(self.centralwidget)
@@ -45,16 +45,16 @@ class Ui_MPLayerGui(object):
         self.labStatus.setObjectName("labStatus")
         self.verticalLayout_4.addWidget(self.labStatus)
         self.verticalLayout_5.addWidget(self.frame)
-        self.listView_2 = QtGui.QListView(self.grpDownloadArea)
+        self.lvDownloads = QtGui.QListView(self.grpDownloadArea)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.listView_2.sizePolicy().hasHeightForWidth())
-        self.listView_2.setSizePolicy(sizePolicy)
-        self.listView_2.setMinimumSize(QtCore.QSize(280, 0))
-        self.listView_2.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.listView_2.setObjectName("listView_2")
-        self.verticalLayout_5.addWidget(self.listView_2)
+        sizePolicy.setHeightForWidth(self.lvDownloads.sizePolicy().hasHeightForWidth())
+        self.lvDownloads.setSizePolicy(sizePolicy)
+        self.lvDownloads.setMinimumSize(QtCore.QSize(280, 0))
+        self.lvDownloads.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.lvDownloads.setObjectName("lvDownloads")
+        self.verticalLayout_5.addWidget(self.lvDownloads)
         self.gridLayout_2 = QtGui.QGridLayout()
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.pubStart = QtGui.QPushButton(self.grpDownloadArea)
@@ -106,15 +106,15 @@ class Ui_MPLayerGui(object):
         self.groupBox.setObjectName("groupBox")
         self.verticalLayout = QtGui.QVBoxLayout(self.groupBox)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.plainTextEdit = QtGui.QPlainTextEdit(self.groupBox)
+        self.pteUrl = QtGui.QPlainTextEdit(self.groupBox)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.plainTextEdit.sizePolicy().hasHeightForWidth())
-        self.plainTextEdit.setSizePolicy(sizePolicy)
-        self.plainTextEdit.setMaximumSize(QtCore.QSize(16777215, 50))
-        self.plainTextEdit.setObjectName("plainTextEdit")
-        self.verticalLayout.addWidget(self.plainTextEdit)
+        sizePolicy.setHeightForWidth(self.pteUrl.sizePolicy().hasHeightForWidth())
+        self.pteUrl.setSizePolicy(sizePolicy)
+        self.pteUrl.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.pteUrl.setObjectName("pteUrl")
+        self.verticalLayout.addWidget(self.pteUrl)
         self.verticalLayout_6.addWidget(self.groupBox)
         self.tabNaming = QtGui.QTabWidget(self.grpAddArea)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
@@ -129,10 +129,10 @@ class Ui_MPLayerGui(object):
         self.verticalLayout_7.setObjectName("verticalLayout_7")
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.listView = QtGui.QListView(self.tabNameEpisode)
-        self.listView.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.listView.setObjectName("listView")
-        self.horizontalLayout_2.addWidget(self.listView)
+        self.lvSeries = QtGui.QListView(self.tabNameEpisode)
+        self.lvSeries.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.lvSeries.setObjectName("lvSeries")
+        self.horizontalLayout_2.addWidget(self.lvSeries)
         self.verticalLayout_2 = QtGui.QVBoxLayout()
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.gridLayout = QtGui.QGridLayout()
@@ -211,7 +211,7 @@ class Ui_MPLayerGui(object):
         self.horizontalLayout_5.addWidget(self.grpAddArea)
         MPLayerGui.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MPLayerGui)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 893, 23))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 915, 23))
         self.menubar.setObjectName("menubar")
         self.menuFile = QtGui.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
@@ -226,6 +226,7 @@ class Ui_MPLayerGui(object):
 
         self.retranslateUi(MPLayerGui)
         self.tabNaming.setCurrentIndex(0)
+        QtCore.QObject.connect(self.actionExit, QtCore.SIGNAL("triggered()"), MPLayerGui.close)
         QtCore.QMetaObject.connectSlotsByName(MPLayerGui)
 
     def retranslateUi(self, MPLayerGui):

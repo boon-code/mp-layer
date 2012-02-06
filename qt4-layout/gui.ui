@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>893</width>
-    <height>626</height>
+    <width>915</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -68,7 +68,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QListView" name="listView_2">
+        <widget class="QListView" name="lvDownloads">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -184,7 +184,7 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <widget class="QPlainTextEdit" name="plainTextEdit">
+           <widget class="QPlainTextEdit" name="pteUrl">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
               <horstretch>0</horstretch>
@@ -221,7 +221,7 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_2">
              <item>
-              <widget class="QListView" name="listView">
+              <widget class="QListView" name="lvSeries">
                <property name="verticalScrollBarPolicy">
                 <enum>Qt::ScrollBarAlwaysOn</enum>
                </property>
@@ -421,7 +421,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>893</width>
+     <width>915</width>
      <height>23</height>
     </rect>
    </property>
@@ -449,8 +449,8 @@
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>446</x>
-     <y>312</y>
+     <x>-1</x>
+     <y>-1</y>
     </hint>
     <hint type="destinationlabel">
      <x>446</x>
