@@ -46,7 +46,6 @@ class DownloadList(QAbstractListModel):
     
     def add(self, dlinfo):
         path = join(self._dlpath, dlinfo.getFilename())
-        
     
     def remove(self, index):
         pass

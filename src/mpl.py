@@ -102,6 +102,9 @@ class EpisodeController(QObject):
     def addEpisode(self):
         pass
     
+    def _checkSeries(self):
+        pass
+    
     def _update(self):
         ui = self._ui
         enabled = True
