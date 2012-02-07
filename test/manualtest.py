@@ -20,9 +20,8 @@ def testInteractive():
     c = mpl.Controller()
     c.show()
     n = c._nameStorage
-    s = n.getOrCreateSeries("Serie-1")
-    s = n.getOrCreateSeries("Serie-2")
-    s = n.getOrCreateSeries("Serie-12")
+    for i in range(1,100):
+        s = n.getOrCreateSeries("Serie%d" % i)
     ret = app.exec_()
     del c
     del app

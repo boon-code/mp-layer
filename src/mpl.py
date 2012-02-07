@@ -67,6 +67,10 @@ class EpisodeController(QObject):
         print "  desl ", desl.isValid()
         if desl.isValid():
             print "  - ", desl.row()
+        
+        text = self._nameStorage.get(sel)
+        if text is not None:
+            self._ui.ledEName.setText(text.name)
     
     @pyqtSlot(QString)
     def changedEpisodeName(self, text):
@@ -74,8 +78,6 @@ class EpisodeController(QObject):
         ret, index = self._nameStorage.find(text)
         if ret:
             print "select index", index.row()
-            self._selModel.setCurrentIndex(index,
-                                           QItemSelectionModel.SelectCurrent)
             self._selModel.setCurrentIndex(index,
                                            QItemSelectionModel.SelectCurrent)
         else:
