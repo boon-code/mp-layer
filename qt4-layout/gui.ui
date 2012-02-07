@@ -277,6 +277,13 @@
                 </layout>
                </item>
                <item>
+                <widget class="QLabel" name="labEInstance">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <spacer name="verticalSpacer_2">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
@@ -425,7 +432,7 @@
      <x>0</x>
      <y>0</y>
      <width>915</width>
-     <height>29</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

@@ -50,65 +50,67 @@ class EpisodeController(QObject):
         QObject.connect(ui.pteUrl, SIGNAL("textChanged()"),
                         self.changedURL)
         QObject.connect(ui.spnEpisode, SIGNAL("valueChanged(int)"),
-                        self.changedEpisodeNr)
+                        self.checkEpisode)
         QObject.connect(ui.spnSeason, SIGNAL("valueChanged(int)"),
-                        self.changedSeasonNr)
+                        self.checkEpisode)
         QObject.connect(ui.pubAddEpisode, SIGNAL("clicked()"),
                         self.addEpisode)
         QObject.connect(self._selModel,
                         SIGNAL("currentChanged(QModelIndex, QModelIndex)"),
                         self.selectedEpisodeChanged)
-        #QObject.connect(ui.
     
     @pyqtSlot()
     def changedURL(self):
-        self._update()
+        self._updateName()
     
     @pyqtSlot()
     def selectedEpisodeChanged(self, sel, desl):
-        
-        print "currentChanged:"
-        print "  sel ", sel.isValid()
-        if sel.isValid():
-            print "  - ", sel.row()
-        print "  desl ", desl.isValid()
-        if desl.isValid():
-            print "  - ", desl.row()
-        
-        text = self._nameStorage.get(sel)
-        if text is not None:
-            self._ui.ledEName.setText(text.name)
+        series = self._nameStorage.get(sel)
+        if series is not None:
+            self._ui.ledEName.setText(series.name)
     
     @pyqtSlot(QString)
     def changedEpisodeName(self, text):
-        self._update()
+        self._updateName()
         ret, index = self._nameStorage.find(text)
         if ret:
-            print "select index", index.row()
             self._selModel.setCurrentIndex(index,
-                                           QItemSelectionModel.SelectCurrent)
+                            QItemSelectionModel.SelectCurrent)
         else:
             self._selModel.clear()
     
-    @pyqtSlot(int)
-    def changedEpisodeNr(self, number):
-        pass
-    
-    @pyqtSlot(int)
-    def changedSeasonNr(self, number):
-        pass
-    
     @pyqtSlot()
     def addEpisode(self):
-        pass
+        series = self._nameStorage.get(self._selModel.currentIndex())
+        if series is not None:
+            ui = self._ui
+            season = ui.spnSeason.value()
+            episode = ui.spnEpisode.value()
+            if not series.inProgress(season, episode):
+                inst = series.createInstance(ui.pteUrl.toPlainText(),
+                                             season, episode)
+            inst.finished.connect(self.checkEpisode)
+            self.checkEpisode()
     
-    def _checkSeries(self):
-        pass
+    @pyqtSlot()
+    def checkEpisode(self):
+        ui = self._ui
+        text = ""
+        if not ui.ledEName.text().isEmpty():
+            series = self._nameStorage.get(self._selModel.currentIndex())
+            if series is not None:
+                season = ui.spnSeason.value()
+                episode = ui.spnEpisode.value()
+                if series.inProgress(season, episode):
+                    text = "This Episode is just downloading"
+                elif series.inHistory(ui.spnSeason.value(),
+                                    ui.spnEpisode.value()):
+                    text = "Has already been downloaded once!"
+        ui.labEInstance.setText(text)
     
-    def _update(self):
+    def _updateName(self):
         ui = self._ui
         enabled = True
-        print "update"
         if ui.ledEName.text().isEmpty():
             enabled = False
         elif ui.pteUrl.toPlainText().isEmpty():

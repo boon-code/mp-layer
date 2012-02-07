@@ -23,7 +23,7 @@ EXIT = 2
 
 class DownloadInfo(QObject):
     
-    succeeded = pyqtSignal()
+    finished = pyqtSignal('bool')
     
     def __init__(self, url, filename):
         QObject.__init__(self)

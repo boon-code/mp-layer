@@ -35,6 +35,7 @@ class SeriesInstance(DownloadInfo):
     
     _TNAME = "%s.S%02dE%02d"
     _DBG_SUCCESS = "Download of file '%s' has been successful."
+    _WRN_FAILURE = "Download of file '%s' has failed."
     
     def __init__(self, url, series, season, episode):
         filename = self._TNAME % (series.name, season, episode)
@@ -42,15 +43,19 @@ class SeriesInstance(DownloadInfo):
         self._series = series
         self.episode = episode
         self.season = season
-        self.succeeded.connect(self.hasSucceeded)
+        self.finished.connect(self.hasFinished)
     
     def getName(self):
         return self._series.name
     
-    @pyqtSlot()
-    def hasSucceeded(self):
-        _log.debug(self._DBG_SUCCESS % self.getFilename())
-        self._series.addToHistory(self._season, self._episode)
+    @pyqtSlot('bool')
+    def hasFinished(self, succeeded):
+        if succeeded:
+            _log.debug(self._DBG_SUCCESS % self.getFilename())
+        else:
+            _log.warning(self._WRN_FAILURE % self.getFilename())
+        # Tell Series class about it (in either case)
+        self._series.finishedInstance(self, succeeded)
 
 
 class Series(object):
@@ -67,12 +72,39 @@ class Series(object):
         self.currentEpisode = curr_episode
         self.accessPriority = 0
         self._history = dict()
+        # DESC: (season, episode) will be added to this set if
+        #       an instance has been created to prevent multiple
+        #       downloads of the same file...
+        self._instances = set()
     
     def createInstance(self, url, season, episode):
-        inst = SeriesInstance(url, self, season, episode)
-        return inst
+        entry = (int(season), int(episode))
+        if entry not in self._instances:
+            _log.debug("created instance '%s.S%02dE%02d'."
+                        % (self.name, season, episode))
+            self._instances.add(entry)
+            inst = SeriesInstance(str(url), self, int(season), int(episode))
+            return inst
+        else:
+            _log.info("'%s.S%02dE%02d' is being downloaded."
+                      % (self.name, season, episode))
     
-    def addToHistory(self, season, episode):
+    def finishedInstance(self, instance, succeeded):
+        season = instance.season
+        episode = instance.episode
+        if succeeded:
+            self._addToHistory(season, episode)
+        else:
+            # ensure that element is not in history
+            if self.inHistory(season, episode):
+                self._removeFromHistory(season, episode)
+    
+    def _removeFromHistory(self, season, episode):
+        if self.inHistory(season, episode):
+            _log.info("Removing '%s.S%02dE%02d' from history!")
+            self._history[season].remove(episode)
+    
+    def _addToHistory(self, season, episode):
         _log.info("Adding episode %d of season %d (series: '%s')."
                   % (episode, season, self.name))
         if season not in self._history:
@@ -127,6 +159,21 @@ class Series(object):
                               season, self.name))
                 self._history[season].update(diff)
     
+    def inHistory(self, season, episode):
+        season = int(season)
+        episode = int(episode)
+        if season in self._history:
+            if episode in self._history[season]:
+                return True
+        return False
+    
+    def inProgress(self, season, episode):
+        entry = (int(season), int(episode))
+        if entry in self._instances:
+            return True
+        else:
+            return False
+    
     def mergeData(self, data):
         try:
             self._tryLoadLast(data)
@@ -141,8 +188,17 @@ class Series(object):
                                     type(history))
             self._mergeHistory(history)
     
+    def _normalizeHistory(self):
+        rm_list = list()
+        for (season, eps) in self._history.items():
+            if len(eps) == 0:
+                rm_list.append(season)
+        for i in rm_list:
+            self._history.pop(i, None)
+    
     def getData(self):
         obj = dict()
+        self._normalizeHistory()
         obj['history'] = copy.deepcopy(self._history)
         obj['last'] = (self.currentSeason, self.currentEpisode)
         return obj
