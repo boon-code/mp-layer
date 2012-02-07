@@ -1,5 +1,6 @@
 from PyQt4.QtCore import (QObject, SIGNAL, SLOT, pyqtSignal, 
-                          pyqtSlot, QAbstractListModel, QModelIndex)
+                          pyqtSlot, QAbstractListModel, QModelIndex,
+                          Qt, QVariant)
 from download import DownloadInfo
 import logging
 import copy
@@ -157,9 +158,11 @@ class SeriesStorage(QAbstractListModel):
         self._idbyname = dict()
     
     def _addSeries(self, name):
+        name = str(name)
         series = Series(name)
         self._series.append(series)
         self._idbyname[name] = self._series.index(series)
+        self.reset()
         return series
     
     def _loadFile(self, path):
@@ -196,12 +199,16 @@ class SeriesStorage(QAbstractListModel):
             return self._series[index.row()]
     
     def find(self, name):
+        name = str(name)
         if name in self._idbyname:
-            return (True, self._series[self._idbyname[name]])
+            # column is not used => 0
+            index = self.createIndex(self._idbyname[name], 0)
+            return (True, index)
         else:
             return (False, None)
     
     def getOrCreateSeries(self, name):
+        name = str(name)
         if name in self._idbyname:
             return self._series[self._idbyname[name]]
         else:

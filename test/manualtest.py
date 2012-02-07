@@ -11,15 +11,26 @@ logging.basicConfig(stream=sys.stderr, format=_DEFAULT_LOG_FORMAT
 
 from os.path import split, normpath, join
 
-def testNaming():
-    import naming as n
-    a = n.Series("Onkel-Bla")
-    b = a.createInstance("url://somewhere", 1, 1)
-    b.succeeded.emit()
+def testInteractive():
+    import mpl
+    import PyQt4.QtCore as core
+    import PyQt4.QtGui as gui
+    app = gui.QApplication(sys.argv)
+    gui.qApp = app
+    c = mpl.Controller()
+    c.show()
+    n = c._nameStorage
+    s = n.getOrCreateSeries("Serie-1")
+    s = n.getOrCreateSeries("Serie-2")
+    s = n.getOrCreateSeries("Serie-12")
+    ret = app.exec_()
+    del c
+    del app
+    sys.exit(ret)
 
 
 def main():
-    testNaming()
+    testInteractive()
 
 
 if __name__ == '__main__':

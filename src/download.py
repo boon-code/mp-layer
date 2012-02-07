@@ -3,7 +3,8 @@ from Queue import Queue
 from threading import Thread, RLock
 from subprocess import Popen, PIPE, STDOUT
 from os.path import join
-from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel)
+from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel, Qt,
+                          QVariant)
 
 
 __author__ = 'Manuel Huber'

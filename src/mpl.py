@@ -10,7 +10,8 @@ logging.basicConfig(stream=sys.stderr, format=_DEFAULT_LOG_FORMAT
 
 from PyQt4.QtCore import (QObject, SIGNAL, SLOT, pyqtSlot, 
                           pyqtSignal, QString)
-from PyQt4.QtGui import (QItemSelection, QMainWindow, QApplication)
+from PyQt4.QtGui import (QItemSelection, QMainWindow, QApplication,
+                         QItemSelectionModel)
 from PyQt4 import QtGui
 from gui import Ui_MPLayerGui
 import naming
@@ -40,6 +41,7 @@ class EpisodeController(QObject):
         self._ui = ui
         ui.lvSeries.setModel(self._nameStorage)
         self._selModel = ui.lvSeries.selectionModel()
+        ui.pubAddEpisode.setEnabled(False)
     
     def doConnections(self):
         ui = self._ui
@@ -52,26 +54,32 @@ class EpisodeController(QObject):
         QObject.connect(ui.pubAddEpisode, SIGNAL("clicked()"),
                         self.addEpisode)
         QObject.connect(self._selModel,
-                        SIGNAL("selectionChanged(QItemSelection, QItemSelection)"),
+                        SIGNAL("currentChanged(QModelIndex, QModelIndex)"),
                         self.selectedEpisodeChanged)
     
     @pyqtSlot()
-    def selectedEpisodeChanged(self, sel, dsl):
-        print "Index changed", sel_index, des_index
-        print "selected items:", 
-        for selitem in sel_index:
-            for index in selitem.indexes():
-                print index.row(), 
-        print ""
-        print "deselect items:",
-        for deselitem in des_index:
-            for index in deselitem.indexes():
-                print index.row(),
-        print ""
+    def selectedEpisodeChanged(self, sel, desl):
+        
+        print "currentChanged:"
+        print "  sel ", sel.isValid()
+        if sel.isValid():
+            print "  - ", sel.row()
+        print "  desl ", desl.isValid()
+        if desl.isValid():
+            print "  - ", desl.row()
     
     @pyqtSlot(QString)
     def changedEpisodeName(self, text):
         self.update()
+        ret, index = self._nameStorage.find(text)
+        if ret:
+            print "select index", index.row()
+            self._selModel.setCurrentIndex(index,
+                                           QItemSelectionModel.SelectCurrent)
+            self._selModel.setCurrentIndex(index,
+                                           QItemSelectionModel.SelectCurrent)
+        else:
+            self._selModel.clear()
     
     @pyqtSlot(int)
     def changedEpisodeNr(self, number):
@@ -90,7 +98,7 @@ class EpisodeController(QObject):
         enabled = True
         if ui.ledEName.text().isEmpty():
             enabled = False
-        ui.pubAddEpisode.addEpisode.setEnabled(enabled)
+        ui.pubAddEpisode.setEnabled(enabled)
 
 
 class Controller(QObject):
