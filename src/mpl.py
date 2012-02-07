@@ -47,6 +47,8 @@ class EpisodeController(QObject):
         ui = self._ui
         QObject.connect(ui.ledEName, SIGNAL("textChanged(QString)"),
                         self.changedEpisodeName)
+        QObject.connect(ui.pteUrl, SIGNAL("textChanged()"),
+                        self.changedURL)
         QObject.connect(ui.spnEpisode, SIGNAL("valueChanged(int)"),
                         self.changedEpisodeNr)
         QObject.connect(ui.spnSeason, SIGNAL("valueChanged(int)"),
@@ -56,6 +58,11 @@ class EpisodeController(QObject):
         QObject.connect(self._selModel,
                         SIGNAL("currentChanged(QModelIndex, QModelIndex)"),
                         self.selectedEpisodeChanged)
+        #QObject.connect(ui.
+    
+    @pyqtSlot()
+    def changedURL(self):
+        self._update()
     
     @pyqtSlot()
     def selectedEpisodeChanged(self, sel, desl):
@@ -74,7 +81,7 @@ class EpisodeController(QObject):
     
     @pyqtSlot(QString)
     def changedEpisodeName(self, text):
-        self.update()
+        self._update()
         ret, index = self._nameStorage.find(text)
         if ret:
             print "select index", index.row()
@@ -95,10 +102,13 @@ class EpisodeController(QObject):
     def addEpisode(self):
         pass
     
-    def update(self):
+    def _update(self):
         ui = self._ui
         enabled = True
+        print "update"
         if ui.ledEName.text().isEmpty():
+            enabled = False
+        elif ui.pteUrl.toPlainText().isEmpty():
             enabled = False
         ui.pubAddEpisode.setEnabled(enabled)
 
