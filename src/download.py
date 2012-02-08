@@ -43,6 +43,7 @@ class DownloadList(QAbstractListModel):
         self._dlpath = dl_path
         self._autostart = autostart
         self._dllist = list()
+        # I have to track all files that are currently downloading...
     
     def add(self, dlinfo):
         path = join(self._dlpath, dlinfo.getFilename())
