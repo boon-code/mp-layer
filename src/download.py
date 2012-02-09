@@ -1,6 +1,5 @@
 import logging
 import os
-from Queue import Queue
 from threading import Thread, RLock
 from subprocess import Popen, PIPE, STDOUT
 from os.path import join, isdir
@@ -9,15 +8,15 @@ from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel, Qt,
 
 
 __author__ = 'Manuel Huber'
-__copyright__ = "Copyright (c) 2011 Manuel Huber."
+__copyright__ = "Copyright (c) 2012 Manuel Huber."
 __license__ = 'GPLv2'
 __version__ = '0.0.0'
 __docformat__ = "restructuredtext en"
 
 
 _log = logging.getLogger(__name__)
-
 _DEFAULT_PATH = os.getcwd()
+
 
 class DownloadException(Exception):
     pass
@@ -59,12 +58,20 @@ class DownloadList(QAbstractListModel):
         self._dlpath = dl_path
         self._autostart = autostart
         self._dllist = list()
-        # TODO: I have to track all files that are currently downloading...
+        self._idbypath = dict()
+    
+    @pyqtSlot('bool')
+    def setAutostart(self, autostart):
+        self._autostart = autostart
     
     @pyqtSlot(QString)
     def setDLPath(self, path):
         path = str(path)
-        if 
+        if isdir(path):
+            self._dlpath = path
+    
+    def _addDownload(self, path):
+        self._dllist = MPStreamer
     
     def add(self, dlinfo):
         path = join(self._dlpath, dlinfo.getFilename())
@@ -80,9 +87,6 @@ class DownloadList(QAbstractListModel):
 
 
 class MPStreamer(object):
-    
-    INF_UNKNOWN_CMD = "Ignoring unknown command received: '%s'"
-    DBG_EXIT_CMD = "Received command exit!"
     
     _id_lock = RLock()
     _current_id = 0
@@ -102,10 +106,10 @@ class MPStreamer(object):
         finally:
             _id_lock.release()
     
-    def __init__(self, dl_path, mp_path="mplayer", name="worker"):
-        self._dl = dl_path
+    def __init__(self, url, dl_path, mp_path="mplayer", name="worker"):
+        self._url = url
+        self._path = dl_path
         self._mplayer = mp_path
-        self._queue = Queue()
         self._name = "%s_%02d" % (name, self.nextId())
         self._thread = Thread(target=self._workerloop)
     
