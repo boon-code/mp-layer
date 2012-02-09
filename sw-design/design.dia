@@ -532,7 +532,7 @@
             <dia:enum val="0"/>
           </dia:attribute>
           <dia:attribute name="comment">
-            <dia:string>#This method starts the download.#</dia:string>
+            <dia:string>#This method starts the download. Raises an Exception if the file already exists.#</dia:string>
           </dia:attribute>
           <dia:attribute name="abstract">
             <dia:boolean val="false"/>
@@ -546,7 +546,25 @@
           <dia:attribute name="class_scope">
             <dia:boolean val="false"/>
           </dia:attribute>
-          <dia:attribute name="parameters"/>
+          <dia:attribute name="parameters">
+            <dia:composite type="umlparameter">
+              <dia:attribute name="name">
+                <dia:string>#force#</dia:string>
+              </dia:attribute>
+              <dia:attribute name="type">
+                <dia:string>##</dia:string>
+              </dia:attribute>
+              <dia:attribute name="value">
+                <dia:string>#False#</dia:string>
+              </dia:attribute>
+              <dia:attribute name="comment">
+                <dia:string>##</dia:string>
+              </dia:attribute>
+              <dia:attribute name="kind">
+                <dia:enum val="1"/>
+              </dia:attribute>
+            </dia:composite>
+          </dia:attribute>
         </dia:composite>
         <dia:composite type="umloperation">
           <dia:attribute name="name">
@@ -1629,8 +1647,8 @@
       </dia:attribute>
       <dia:attribute name="orth_points">
         <dia:point val="22.9,42.65"/>
-        <dia:point val="18.7651,42.65"/>
-        <dia:point val="18.7651,41.7"/>
+        <dia:point val="18.765,42.65"/>
+        <dia:point val="18.765,41.7"/>
         <dia:point val="14.6301,41.7"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">

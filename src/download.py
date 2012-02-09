@@ -1,10 +1,11 @@
 import logging
+import os
 from Queue import Queue
 from threading import Thread, RLock
 from subprocess import Popen, PIPE, STDOUT
-from os.path import join
+from os.path import join, isdir
 from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel, Qt,
-                          QVariant)
+                          QVariant, pyqtSlot)
 
 
 __author__ = 'Manuel Huber'
@@ -16,9 +17,22 @@ __docformat__ = "restructuredtext en"
 
 _log = logging.getLogger(__name__)
 
+_DEFAULT_PATH = os.getcwd()
 
-DOWNLOAD = 1
-EXIT = 2
+class DownloadException(Exception):
+    pass
+
+
+class FileExistsError(DownloadException):
+    
+    def __init__(self, path):
+        self.path = path
+
+
+class InvalidPathError(DownloadException):
+    
+    def __init__(self, path):
+        self.path = path
 
 
 class DownloadInfo(QObject):
@@ -39,11 +53,18 @@ class DownloadInfo(QObject):
 
 class DownloadList(QAbstractListModel):
     
-    def __init__(self, dl_path, autostart=True):
+    invalidDLPath = pyqtSignal()
+    
+    def __init__(self, dl_path=_DEFAULT_PATH, autostart=True):
         self._dlpath = dl_path
         self._autostart = autostart
         self._dllist = list()
-        # I have to track all files that are currently downloading...
+        # TODO: I have to track all files that are currently downloading...
+    
+    @pyqtSlot(QString)
+    def setDLPath(self, path):
+        path = str(path)
+        if 
     
     def add(self, dlinfo):
         path = join(self._dlpath, dlinfo.getFilename())
@@ -68,6 +89,11 @@ class MPStreamer(object):
     
     @classmethod
     def nextId(cls):
+        """Generates unique id's.
+        
+        This class method is used to generate unique id's
+        for all MPStreamer instances.
+        """
         _id_lock.acquire()
         try:
             id = _id_lock
