@@ -1,7 +1,6 @@
 import logging
 import os
-from threading import Thread, RLock
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen
 from os.path import join, isdir
 from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel, Qt,
                           QVariant, pyqtSlot)
@@ -26,6 +25,12 @@ class FileExistsError(DownloadException):
     
     def __init__(self, path):
         self.path = path
+
+
+class AlreadyStartedError(DownloadException):
+    
+    def __init__(self, filepath):
+        self.file = filepath
 
 
 class InvalidPathError(DownloadException):
@@ -96,24 +101,26 @@ class MPStreamer(object):
         """Generates unique id's.
         
         This class method is used to generate unique id's
-        for all MPStreamer instances.
+        for all MPStreamer instances. (Not thread safe)
         """
-        _id_lock.acquire()
-        try:
-            id = _id_lock
-            _id_lock += 1
-            return id
-        finally:
-            _id_lock.release()
+        cls._id_lock += 1
+        return cls._id_lock
     
     def __init__(self, url, dl_path, mp_path="mplayer", name="worker"):
         self._url = url
         self._path = dl_path
         self._mplayer = mp_path
         self._name = "%s_%02d" % (name, self.nextId())
-        self._thread = Thread(target=self._workerloop)
+        self._proc = None
     
-    def _workerloop(self):
+    def start(self, overwrite=False):
+        if self._proc is not None:
+            raise AlreadyStartedError(self._path)
+        else:
+            # TODO: Continue here!
+            self._proc = subprocess.Popen(
+    
+    def _download(self):
         while True:
             cmd, fname, url = self._queue.get(True)
             if cmd == DOWNLOAD:
