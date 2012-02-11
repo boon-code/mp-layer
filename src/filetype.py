@@ -1,6 +1,7 @@
 import logging
 from PyQt4.QtCore import (QObject, pyqtSlot, pyqtSignal, QProcess, Qt)
 
+
 __author__ = 'Manuel Huber'
 __copyright__ = "Copyright (c) 2012 Manuel Huber."
 __license__ = 'GPLv2'
@@ -27,9 +28,13 @@ def ExtGuesser(QObject):
         QObject.__init__(self)
         self._path = path
         self._proc = QProcess()
+        self._proc.finished.connect(self._finished)
     
-    def _doConnections(self):
+    def _getExtension(self, fout):
         pass
     
     def __call__(self):
-        pass
+        self._proc.start("file", ["-b", path])
+        self._proc.waitForFinished()
+        data = self._proc.readAllStandardOutput()
+        
