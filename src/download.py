@@ -1,9 +1,9 @@
 import logging
 import os
 from subprocess import Popen
-from os.path import join, isdir
+from os.path import join, isdir, exists
 from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel, Qt,
-                          QVariant, pyqtSlot)
+                          QVariant, pyqtSlot, QProcess)
 
 
 __author__ = 'Manuel Huber'
@@ -27,7 +27,7 @@ class FileExistsError(DownloadException):
         self.path = path
 
 
-class AlreadyStartedError(DownloadException):
+class AlreadyRunningError(DownloadException):
     
     def __init__(self, filepath):
         self.file = filepath
@@ -80,6 +80,7 @@ class DownloadList(QAbstractListModel):
     
     def add(self, dlinfo):
         path = join(self._dlpath, dlinfo.getFilename())
+        # TODO: continue
     
     def remove(self, index):
         pass
@@ -91,10 +92,21 @@ class DownloadList(QAbstractListModel):
         pass
 
 
-class MPStreamer(object):
+class MPStreamer(QObject):
     
-    _id_lock = RLock()
+    RUN_BIT = 1
+    FIN_BIT = 2
+    ERROR_BIT = 2
+    
+    _READY = 0
+    _RUNNING = RUN_BIT
+    _FINISHED_SUC = FIN_BIT
+    _FINISHED_ERR = ERROR_BIT | FIN_BIT
+    
     _current_id = 0
+    
+    finished = pyqtSignal(bool)
+    changedStatus = pyqtSignal(int)
     
     @classmethod
     def nextId(cls):
@@ -103,41 +115,62 @@ class MPStreamer(object):
         This class method is used to generate unique id's
         for all MPStreamer instances. (Not thread safe)
         """
-        cls._id_lock += 1
-        return cls._id_lock
+        cid = cls._current_id
+        cls._current_id += 1
+        return cid
     
-    def __init__(self, url, dl_path, mp_path="mplayer", name="worker"):
+    def __init__(self, url, path, mp_path="mplayer", name="worker"):
         self._url = url
-        self._path = dl_path
+        self._path = path
         self._mplayer = mp_path
         self._name = "%s_%02d" % (name, self.nextId())
-        self._proc = None
+        self._proc = QProcess()
+        self._status = self._READY
+        self._doConnections()
+    
+    def _doConnection(self):
+        self._proc.finished.connect(self._qprocessFinished)
+        self._proc.stateChanged.connect(self.qprocessStateChanged)
     
     def start(self, overwrite=False):
-        if self._proc is not None:
-            raise AlreadyStartedError(self._path)
+        if self._status & self.RUN_BIT:
+            raise AlreadyRunningError(self._path)
+        elif exists(self._path) and (not overwrite):
+            raise FileExistsError(self._path)
         else:
-            # TODO: Continue here!
-            self._proc = subprocess.Popen(
+            if self._status & self.FIN_BIT:
+                _log.debug("Restarting Download of file '%s'"
+                           % self._path)
+            args = ["-dumpstream", "-dumpfile", self._path, self._url]
+            self._proc.start(self._mplayer, args)
     
-    def _download(self):
-        while True:
-            cmd, fname, url = self._queue.get(True)
-            if cmd == DOWNLOAD:
-                pass
-            elif cmd == EXIT:
-                _log.debug(self.DBG_EXIT_CMD)
-                return
-            else:
-                _log.info(self.INF_UNKNOWN_CMD % str(cmd[0]))
+    def _qprocessStateChanged(self, new_state):
+        old_status = self._status
+        if new_state != self.NotRunning:
+            self._status = self._RUNNING
+        else:
+            self._status &= ~(self.RUN_BIT)
+        if old_status != self._status:
+            self.changedStatus.emit(self._status)
     
-    def _dl_mplayer(self, fname, url):
-        path = join(self._dl_path, fname)
-        args = [self._mplayer, '-dumpstream', '-dumpfile', path,
-          '"%s"' % url]
-        process = Popen(args, stdout=PIPE, stderr=STDOUT)
+    def _qprocessFinished(self, exit_code, exit_status):
+        old_status = self._status
+        self._status |= self.FIN_BIT
+        if exit_status == QProcess.NormalExit:
+            # further checking...
+            self._status |= self.SUCCESS_BIT
+        else:
+            self._status |= self.ERROR_BIT
         
+        if self._status != old_status:
+            self.changedStatus.emit(self._status)
+    
+    def kill(self):
+        self._proc.kill()
+    
+    def getStatus(self):
+        return self._status
 
 
 if __name__ == '__main__':
-    streamer1 = MPStreamer("../dl")
+    pass
