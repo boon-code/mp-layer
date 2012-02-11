@@ -156,12 +156,10 @@ class MPStreamer(QObject):
     def _qprocessFinished(self, exit_code, exit_status):
         old_status = self._status
         self._status |= self.FIN_BIT
-        if exit_status == QProcess.NormalExit:
-            # further checking...
-            self._status |= self.SUCCESS_BIT
-        else:
+        if exit_status != QProcess.NormalExit:
             self._status |= self.ERROR_BIT
-        
+        else:
+            
         if self._status != old_status:
             self.changedStatus.emit(self._status)
     
