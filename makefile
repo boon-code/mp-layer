@@ -1,5 +1,5 @@
 NAME=mpl
-SRCS=src/mpl.py src/download.py src/naming.py
+SRCS=src/mpl.py src/download.py src/filetype.py src/naming.py src/customqt.py
 
 ZIPPER= 
 EPYDOC=epydoc

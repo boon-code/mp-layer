@@ -1,7 +1,9 @@
 import logging
 import os
+import filetype
 from subprocess import Popen
 from os.path import join, isdir, exists
+from os import rename
 from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel, Qt,
                           QVariant, pyqtSlot, QProcess)
 
@@ -159,7 +161,19 @@ class MPStreamer(QObject):
         if exit_status != QProcess.NormalExit:
             self._status |= self.ERROR_BIT
         else:
-            
+            try:
+                ext = filetype.ExtGuesser(self._path)
+            except filetype.InvalidPathError as ex:
+                _log.critical("Downloaded file '%s' seems to not exist."
+                              % ex.path)
+                self._status = self._FINISHED_ERR
+            except filetype.ExternalProgramError as ex:
+                _log.critical("External program to guess ext. failed!")
+                self._status = self._FINISHED_ERR
+            else:
+                _log.debug("Renaming '%s' to '%s'."
+                           % (self._path, self._path + "." + ext))
+                rename(self._path, self._path + "." + ext)
         if self._status != old_status:
             self.changedStatus.emit(self._status)
     

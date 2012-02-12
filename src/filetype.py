@@ -1,4 +1,5 @@
 import logging
+from os.path import exists
 from PyQt4.QtCore import (QObject, pyqtSlot, pyqtSignal, QProcess, Qt)
 
 
@@ -16,13 +17,17 @@ class FileTypeException(Exception):
     pass
 
 
-class InvalidPathException(FileTypeException):
+class InvalidPathError(FileTypeException):
     
     def __init__(self, path):
         self.path = path
 
 
-def ExtGuesser(QObject):
+class ExternalProgramError(FileTypeException):
+    pass
+
+
+class ExtGuesser(object):
     
     _TAVI = "AVI"
     _MMP4 = "video/mp4"
@@ -31,12 +36,12 @@ def ExtGuesser(QObject):
     
     
     def __init__(self, path):
-        QObject.__init__(self)
         self._path = path
         self._proc = QProcess()
-        self._proc.finished.connect(self._finished)
+        if not exists(self._path):
+            raise InvalidPathError(path)
     
-    def _getExtension(self, text, mime):
+    def _guessExtension(self, text, mime):
         if text.find(self._TAVI) >= 0:
             return "avi"
         elif mime.find(self._MMP4) >= 0:
@@ -47,15 +52,14 @@ def ExtGuesser(QObject):
         else:
             return "unk"
     
-    def __call__(self):
-        self._proc.start("file", ["-b", path])
+    def get(self):
+        self._proc.start("file", ["-b", self._path])
         ret0 = self._proc.waitForFinished()
-        textual = self._proc.readAllStandardOutput()
-        self._proc.start("file", ["-bi", path])
+        textual = str(self._proc.readAllStandardOutput())
+        self._proc.start("file", ["-bi", self._path])
         ret1 = self._proc.waitForFinished()
-        mime = self._proc.readAllStandardOutput()
+        mime = str(self._proc.readAllStandardOutput())
         if ret0 and ret1:
-            return self._getExtension(textual, mime)
+            return self._guessExtension(textual, mime)
         else:
-            # TODO: raise an Exception
-            pass
+            raise ExternalProgramError()
