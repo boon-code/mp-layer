@@ -140,6 +140,7 @@ class MPStreamer(QObject):
         self._name = "%s_%02d" % (name, self.nextId())
         self._proc = QProcess()
         self._status = self._READY
+        self._lerror = None
         self._doConnections()
     
     def _doConnections(self):
@@ -148,6 +149,7 @@ class MPStreamer(QObject):
     
     def start(self, overwrite=False):
         # TODO: check if path exists and is accessible
+        self._lerror = None
         if self._status & self.RUN_BIT:
             raise AlreadyRunningError(self._path)
         elif exists(self._path) and (not overwrite):
@@ -156,7 +158,8 @@ class MPStreamer(QObject):
             if self._status & self.FIN_BIT:
                 _log.debug("Restarting Download of file '%s'"
                            % self._path)
-            args = ["-dumpstream", "-dumpfile", self._path, self._url]
+            args = ["-nolirc", "-dumpstream", "-dumpfile", self._path,
+                    self._url]
             self._proc.start(self._mplayer, args)
     
     def _qprocessStateChanged(self, new_state):
@@ -168,6 +171,15 @@ class MPStreamer(QObject):
             self._status &= ~(self.RUN_BIT)
         if old_status != self._status:
             self.changedStatus.emit(self._status)
+    
+    def _receivedProcessErrorMsg(self):
+        err = str(self._proc.readAllStandardError())
+        self._lerror = err
+        # BAD: I should find some better way to check...
+        if err.find("Failed to open"):
+            return True
+        else:
+            return False
     
     def _qprocessFinished(self, exit_code, exit_status):
         _log.info("QProcess::finished code='%s', status='%s'"
@@ -181,7 +193,12 @@ class MPStreamer(QObject):
             _log.debug("Process most likly crashed!")
             self._status |= self.ERROR_BIT
         elif exit_code != 0:
+            # This doesn't really indicate an error... :(
             _log.debug("mplayer failed (exit-code: %d)!" % exit_code)
+            self._status |= self.ERROR_BIT
+        elif self._receivedProcessErrorMsg():
+            _log.debug("mplayer couldn't open url or access download-\
+            location")
             self._status |= self.ERROR_BIT
         else:
             try:
