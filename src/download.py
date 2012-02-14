@@ -71,14 +71,15 @@ class DownloadList(QAbstractListModel):
     def setAutostart(self, autostart):
         self._autostart = autostart
     
-    @pyqtSlot(QString)
+    @pyqtSlot('QString')
     def setDLPath(self, path):
         path = str(path)
         if isdir(path):
             self._dlpath = path
     
     def _addDownload(self, path):
-        self._dllist = MPStreamer
+        #self._dllist = MPStreamer
+        pass
     
     def add(self, dlinfo):
         path = join(self._dlpath, dlinfo.getFilename())
@@ -116,12 +117,22 @@ class MPStreamer(QObject):
         
         This class method is used to generate unique id's
         for all MPStreamer instances. (Not thread safe)
+        :param cls: The 'class' object that called this method.
         """
         cid = cls._current_id
         cls._current_id += 1
         return cid
     
     def __init__(self, url, path, mp_path="mplayer", name="worker"):
+        """Creates and initializes a new streamer object.
+        
+        :param url:     Download URL
+        :param path:    Path where the stream should be saved.
+        :param mp_path: Optional path to the mplayer (used to download
+                        the stream).
+        :param name:    Optional name of this streamer (This name
+                        will be used in debug messages...).
+        """
         self._url = url
         self._path = path
         self._mplayer = mp_path
@@ -130,7 +141,7 @@ class MPStreamer(QObject):
         self._status = self._READY
         self._doConnections()
     
-    def _doConnection(self):
+    def _doConnections(self):
         self._proc.finished.connect(self._qprocessFinished)
         self._proc.stateChanged.connect(self.qprocessStateChanged)
     
@@ -156,29 +167,36 @@ class MPStreamer(QObject):
             self.changedStatus.emit(self._status)
     
     def _qprocessFinished(self, exit_code, exit_status):
+        succeeded = False
         old_status = self._status
         self._status |= self.FIN_BIT
         if exit_status != QProcess.NormalExit:
             self._status |= self.ERROR_BIT
         else:
             try:
-                ext = filetype.ExtGuesser(self._path)
+                ext = filetype.ExtGuesser(self._path).get()
             except filetype.InvalidPathError as ex:
                 _log.critical("Downloaded file '%s' seems to not exist."
                               % ex.path)
                 self._status = self._FINISHED_ERR
-            except filetype.ExternalProgramError as ex:
+            except filetype.ExternalProgramError:
                 _log.critical("External program to guess ext. failed!")
                 self._status = self._FINISHED_ERR
             else:
                 _log.debug("Renaming '%s' to '%s'."
                            % (self._path, self._path + "." + ext))
                 rename(self._path, self._path + "." + ext)
+                succeeded = True
         if self._status != old_status:
             self.changedStatus.emit(self._status)
+        self.finished.emit(succeeded)
     
     def kill(self):
+        #old_status = self._status
         self._proc.kill()
+        #self._status = self.FIN_BIT | self.ERROR_BIT
+        #if old_status != self._status:
+        #   self.changedStatus.emit(self._status)
     
     def getStatus(self):
         return self._status
