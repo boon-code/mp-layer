@@ -2,7 +2,7 @@ import logging
 import os
 import filetype
 from subprocess import Popen
-from os.path import join, isdir, exists
+from os.path import join, isdir, exists, split
 from os import rename
 from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel, Qt,
                           QVariant, pyqtSlot, QProcess)
@@ -99,7 +99,7 @@ class MPStreamer(QObject):
     
     RUN_BIT = 1
     FIN_BIT = 2
-    ERROR_BIT = 2
+    ERROR_BIT = 4
     
     _READY = 0
     _RUNNING = RUN_BIT
@@ -133,6 +133,7 @@ class MPStreamer(QObject):
         :param name:    Optional name of this streamer (This name
                         will be used in debug messages...).
         """
+        QObject.__init__(self)
         self._url = url
         self._path = path
         self._mplayer = mp_path
@@ -143,9 +144,10 @@ class MPStreamer(QObject):
     
     def _doConnections(self):
         self._proc.finished.connect(self._qprocessFinished)
-        self._proc.stateChanged.connect(self.qprocessStateChanged)
+        self._proc.stateChanged.connect(self._qprocessStateChanged)
     
     def start(self, overwrite=False):
+        # TODO: check if path exists and is accessible
         if self._status & self.RUN_BIT:
             raise AlreadyRunningError(self._path)
         elif exists(self._path) and (not overwrite):
@@ -159,7 +161,8 @@ class MPStreamer(QObject):
     
     def _qprocessStateChanged(self, new_state):
         old_status = self._status
-        if new_state != self.NotRunning:
+        _log.info("QProcess::stateChanged '%s'" % str(new_state))
+        if new_state != QProcess.NotRunning:
             self._status = self._RUNNING
         else:
             self._status &= ~(self.RUN_BIT)
@@ -167,10 +170,18 @@ class MPStreamer(QObject):
             self.changedStatus.emit(self._status)
     
     def _qprocessFinished(self, exit_code, exit_status):
+        _log.info("QProcess::finished code='%s', status='%s'"
+                  % (str(exit_code), str(exit_status)))
+        _log.debug("stdout: '%s'" % str(self._proc.readAllStandardOutput()))
+        _log.debug("stderr: '%s'" % str(self._proc.readAllStandardError()))
         succeeded = False
         old_status = self._status
         self._status |= self.FIN_BIT
         if exit_status != QProcess.NormalExit:
+            _log.debug("Process most likly crashed!")
+            self._status |= self.ERROR_BIT
+        elif exit_code != 0:
+            _log.debug("mplayer failed (exit-code: %d)!" % exit_code)
             self._status |= self.ERROR_BIT
         else:
             try:
