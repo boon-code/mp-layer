@@ -197,8 +197,7 @@ class MPStreamer(QObject):
             _log.debug("mplayer failed (exit-code: %d)!" % exit_code)
             self._status |= self.ERROR_BIT
         elif self._receivedProcessErrorMsg():
-            _log.debug("mplayer couldn't open url or access download-\
-            location")
+            _log.debug("mplayer couldn't open url")
             self._status |= self.ERROR_BIT
         else:
             try:
