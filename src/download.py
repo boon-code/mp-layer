@@ -5,7 +5,7 @@ from subprocess import Popen
 from os.path import join, isdir, exists, split
 from os import rename
 from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel, Qt,
-                          QVariant, pyqtSlot, QProcess)
+                          QVariant, pyqtSlot, QProcess, QModelIndex)
 
 
 __author__ = 'Manuel Huber'
@@ -33,6 +33,12 @@ class AlreadyRunningError(DownloadException):
     
     def __init__(self, filepath):
         self.file = filepath
+
+
+class AlreadyAddedError(DownloadException):
+    
+    def __init__(self, filename):
+        self.file = filename
 
 
 class InvalidPathError(DownloadException):
@@ -66,6 +72,7 @@ class DownloadList(QAbstractListModel):
     invalidDLPath = pyqtSignal()
     
     def __init__(self, dl_path=_DEFAULT_PATH, autostart=True):
+        QAbstractListModel.__init__(self, None)
         self._dlpath = dl_path
         self._autostart = autostart
         self._dllist = list()
@@ -81,22 +88,42 @@ class DownloadList(QAbstractListModel):
         if isdir(path):
             self._dlpath = path
     
-    def _addDownload(self, path):
-        #self._dllist = MPStreamer
-        pass
-    
     def add(self, dlinfo):
         dlinfo.dest_dir = self._dlpath
-        # TODO: continue
+        name = dlinfo.getFilename()
+        if name in self._idbypath:
+            raise AlreadyAddedError(name)
+        else:
+            streamer = MPStreamer(dlinfo)
+            self._dllist.append(streamer)
+            self._idbypath[name] = self._dllist.index(streamer)
+            self.reset()
     
     def remove(self, index):
-        pass
+        streamer = self.getStreamer(index)
+        if streamer is not None:
+            if streamer.getStatus() & streamer.RUN_BIT == 0:
+                idx = self._idbypath.pop(str(streamer))
+                self._dllist.pop(idx)
     
     def kill(self, index):
-        pass
+        streamer = self.getStreamer(index)
+        if streamer is not None:
+            if streamer.getStatus() & streamer.RUN_BIT != 0:
+                streamer.kill()
     
     def getStreamer(self, index):
-        pass
+        if index.isValid():
+            return self._dllist[index.row()]
+    
+    def data(self, index, role):
+        if index.isValid() and role == Qt.DisplayRole:
+            return QVariant(str(self._dllist[index.row()]))
+        else:
+            return QVariant()
+    
+    def rowCount(self, parent=QModelIndex()):
+        return len(self._dllist)
 
 
 class MPStreamer(QObject):
@@ -144,6 +171,9 @@ class MPStreamer(QObject):
         self._status = self._READY
         self._lerror = None
         self._doConnections()
+    
+    def __str__(self):
+        return self._info.getFilename()
     
     def _doConnections(self):
         self._proc.finished.connect(self._qprocessFinished)

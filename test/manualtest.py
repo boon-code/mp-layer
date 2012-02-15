@@ -19,7 +19,7 @@ def testInteractive():
     gui.qApp = app
     c = mpl.Controller()
     c.show()
-    n = c._nameStorage
+    n = c.nameStorage
     for i in range(1,100):
         s = n.getOrCreateSeries("Serie%d" % i)
     ret = app.exec_()

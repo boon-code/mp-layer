@@ -44,6 +44,9 @@ class EpisodeController(QObject):
     
     def doConnections(self):
         ui = self._ui
+        ui.ledEName.textChanged.connect(self.changedEpisodeName)
+        ui.spnEpisode.valueChanged.connect(self.checkEpisode)
+        ui.spnSeason.valueChanged.connect(self.checkEpisode)
         QObject.connect(ui.ledEName, SIGNAL("textChanged(QString)"),
                         self.changedEpisodeName)
         QObject.connect(ui.pteUrl, SIGNAL("textChanged()"),
@@ -60,7 +63,7 @@ class EpisodeController(QObject):
     
     @pyqtSlot()
     def changedURL(self):
-        self._updateName()
+        self._updateEpisode()
     
     @pyqtSlot()
     def selectedEpisodeChanged(self, sel, desl):
@@ -70,7 +73,7 @@ class EpisodeController(QObject):
     
     @pyqtSlot(QString)
     def changedEpisodeName(self, text):
-        self._updateName()
+        self._updateEpisode()
         ret, index = self._nameStorage.find(text)
         if ret:
             self._selModel.setCurrentIndex(index,
@@ -107,7 +110,7 @@ class EpisodeController(QObject):
                     text = "Has already been downloaded once!"
         ui.labEInstance.setText(text)
     
-    def _updateName(self):
+    def _updateEpisode(self):
         ui = self._ui
         enabled = True
         if ui.ledEName.text().isEmpty():
@@ -119,7 +122,7 @@ class EpisodeController(QObject):
 
 class Controller(QObject):
     
-    changedUrl = pyqtSignal()
+    changedURL = pyqtSignal()
     
     def __init__(self, dl_path=DL_PATH):
         QObject.__init__(self)
@@ -128,11 +131,10 @@ class Controller(QObject):
         self.ui.setupUi(self._gui)
         self.dlList = download.DownloadList(dl_path)
         self.nameStorage = naming.SeriesStorage()
-        self._epiController = EpisodeController(self)
         self.valid_url = False
-        #
         self.ui.pubAddSimple.setEnabled(False)
-        self._ui.lvSeries.setModel(self.nameStorage)
+        self.ui.lvSeries.setModel(self.nameStorage)
+        self._epiController = EpisodeController(self)
         self._doConnections()
     
     @pyqtSlot(QString)
@@ -140,18 +142,17 @@ class Controller(QObject):
         if text.isEmpty():
             self.ui.pubAddSimple.setEnabled(False)
         elif not self.ui.pubAddSimple.isEnabled():
-            self.updateSimpleButton()
+            self._updateSimpleButton()
     
     @pyqtSlot()
     def _changedURL(self):
-        text = self.ui.pteUrl.toPlainText()
-        if text.isEmpty() and self.valid_url:
+        url_empty = self.ui.pteUrl.toPlainText().isEmpty()
+        if url_empty and self.valid_url:
             self.valid_url = False
-            self.changedUrl.emit()
-        else:
-            if not self.valid_url:
-                self.valid_url = True
-                self.changedUrl.emit()
+            self.changedURL.emit()
+        elif (not url_empty) and (not self.valid_url):
+            self.valid_url = True
+            self.changedURL.emit()
     
     @pyqtSlot()
     def _updateSimpleButton(self):
@@ -165,7 +166,7 @@ class Controller(QObject):
         self.ui.pteUrl.textChanged.connect(self._changedURL)
         self.ui.ledMName.textChanged.connect(self._changedSimpleName)
         self._epiController.doConnections()
-        self.changedUrl.connect(self._updateSimpleButton)
+        self.changedURL.connect(self._updateSimpleButton)
     
     def show(self):
         self._gui.show()
