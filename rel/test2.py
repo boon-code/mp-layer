@@ -1,4 +1,5 @@
 import sys
+import time
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
@@ -33,7 +34,7 @@ class AppKiller(QObject):
         self._timer = QTimer()
         self._num = time
         self._timer.timeout.connect(self.killerSlot)
-        self._timer.start(1000)
+        self._timer.start(2000)
     
     @pyqtSlot()
     def killerSlot(self):
@@ -44,14 +45,52 @@ class AppKiller(QObject):
         else:
             print "Counting down..."
 
+class C(QObject):
+    
+    def __init__(self):
+        QObject.__init__(self)
+        self._t1 = QTimer()
+        self._t2 = QTimer()
+        self._t1.timeout.connect(self.slot1)
+        self._t2.timeout.connect(self.slot2)
+        self._t1.start(1000)
+        self._t2.start(10)
+        self._dis = False
+        self._num = 0
+    
+    @pyqtSlot()
+    def slot1(self):
+        print "slot1 started"
+        time.sleep(2)
+        if not self._dis:
+            print "Disconnecting!"
+            self._dis = True
+            self._t2.stop()
+            #self._t2.timeout.disconnect(self.slot2)
+        print "slot1 finished"
+    
+    @pyqtSlot()
+    def slot2(self):
+        print "slot2 - %d" % self._num
+        self._num += 1
+    
+    def quit(self):
+        self._t1.stop()
+        self._t2.stop()
+    
+
 app = QApplication([])
-a = B(7)
-a.test()
+#a = B(7)
+#a.test()
 b = AppKiller(5)
 b.kill.connect(app.quit)
+c = C()
+
+
 
 app.exec_()
+c.quit()
 
-del a
 del b
+del c
 del app

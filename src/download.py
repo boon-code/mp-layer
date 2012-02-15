@@ -45,8 +45,9 @@ class DownloadInfo(QObject):
     
     finished = pyqtSignal('bool')
     
-    def __init__(self, url, filename):
+    def __init__(self, url, filename, dest_dir='.'):
         QObject.__init__(self)
+        self.dest_dir = dest_dir
         self._url = url
         self._filename = filename
     
@@ -55,6 +56,9 @@ class DownloadInfo(QObject):
     
     def getFilename(self):
         return self._filename
+    
+    def getPath(self):
+        return join(self.dest_dir, self._filename)
 
 
 class DownloadList(QAbstractListModel):
@@ -82,7 +86,7 @@ class DownloadList(QAbstractListModel):
         pass
     
     def add(self, dlinfo):
-        path = join(self._dlpath, dlinfo.getFilename())
+        dlinfo.dest_dir = self._dlpath
         # TODO: continue
     
     def remove(self, index):
@@ -123,19 +127,17 @@ class MPStreamer(QObject):
         cls._current_id += 1
         return cid
     
-    def __init__(self, url, path, mp_path="mplayer", name="worker"):
+    def __init__(self, dlinfo, mp_path="mplayer", name="worker"):
         """Creates and initializes a new streamer object.
         
-        :param url:     Download URL
-        :param path:    Path where the stream should be saved.
+        :param dlinfo:  Download info container
         :param mp_path: Optional path to the mplayer (used to download
                         the stream).
         :param name:    Optional name of this streamer (This name
                         will be used in debug messages...).
         """
         QObject.__init__(self)
-        self._url = url
-        self._path = path
+        self._info = dlinfo
         self._mplayer = mp_path
         self._name = "%s_%02d" % (name, self.nextId())
         self._proc = QProcess()
@@ -151,15 +153,15 @@ class MPStreamer(QObject):
         # TODO: check if path exists and is accessible
         self._lerror = None
         if self._status & self.RUN_BIT:
-            raise AlreadyRunningError(self._path)
+            raise AlreadyRunningError(self._info.getPath())
         elif exists(self._path) and (not overwrite):
-            raise FileExistsError(self._path)
+            raise FileExistsError(self._info.getPath())
         else:
             if self._status & self.FIN_BIT:
                 _log.debug("Restarting Download of file '%s'"
-                           % self._path)
-            args = ["-nolirc", "-dumpstream", "-dumpfile", self._path,
-                    self._url]
+                           % self._info.getPath())
+            args = ["-nolirc", "-dumpstream", "-dumpfile",
+                    self._info.getPath(), self._info.getSourceURL()]
             self._proc.start(self._mplayer, args)
     
     def _qprocessStateChanged(self, new_state):
@@ -173,10 +175,8 @@ class MPStreamer(QObject):
             self.changedStatus.emit(self._status)
     
     def _receivedProcessErrorMsg(self):
-        err = str(self._proc.readAllStandardError())
-        self._lerror = err
         # BAD: I should find some better way to check...
-        if err.find("Failed to open"):
+        if self._lerror.find("Failed to open"):
             return True
         else:
             return False
@@ -185,7 +185,8 @@ class MPStreamer(QObject):
         _log.info("QProcess::finished code='%s', status='%s'"
                   % (str(exit_code), str(exit_status)))
         _log.debug("stdout: '%s'" % str(self._proc.readAllStandardOutput()))
-        _log.debug("stderr: '%s'" % str(self._proc.readAllStandardError()))
+        self._lerror = str(self._proc.readAllStandardError())
+        _log.debug("stderr: '%s'" % self._lerror)
         succeeded = False
         old_status = self._status
         self._status |= self.FIN_BIT
@@ -200,8 +201,9 @@ class MPStreamer(QObject):
             _log.debug("mplayer couldn't open url")
             self._status |= self.ERROR_BIT
         else:
+            path = self._info.getPath()
             try:
-                ext = filetype.ExtGuesser(self._path).get()
+                ext = filetype.ExtGuesser(path).get()
             except filetype.InvalidPathError as ex:
                 _log.critical("Downloaded file '%s' seems to not exist."
                               % ex.path)
@@ -211,19 +213,15 @@ class MPStreamer(QObject):
                 self._status = self._FINISHED_ERR
             else:
                 _log.debug("Renaming '%s' to '%s'."
-                           % (self._path, self._path + "." + ext))
-                rename(self._path, self._path + "." + ext)
+                           % (path, path + "." + ext))
+                rename(path, path + "." + ext)
                 succeeded = True
         if self._status != old_status:
             self.changedStatus.emit(self._status)
         self.finished.emit(succeeded)
     
     def kill(self):
-        #old_status = self._status
         self._proc.kill()
-        #self._status = self.FIN_BIT | self.ERROR_BIT
-        #if old_status != self._status:
-        #   self.changedStatus.emit(self._status)
     
     def getStatus(self):
         return self._status

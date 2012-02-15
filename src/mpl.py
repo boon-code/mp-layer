@@ -33,23 +33,14 @@ class EpisodeController(QObject):
     nextEpisode = pyqtSignal(int)
     currentSeason = pyqtSignal(int)
     
-    def __init__(self, ui, dl_list, name_storage):
+    def __init__(self, controller):
         QObject.__init__(self)
-        # ui elements:
-        #ui.ledEName
-        #ui.ledTitle
-        #ui.spnSeason
-        #ui.spnEpisode
-        #ui.pubAddEpisode
-        #ui.lvSeries
-        #ui.pteUrl
-        # member:
-        self._nameStorage = name_storage
-        self._dlList = dl_list
-        self._ui = ui
-        ui.lvSeries.setModel(self._nameStorage)
-        self._selModel = ui.lvSeries.selectionModel()
-        ui.pubAddEpisode.setEnabled(False)
+        self._ctrl = controller
+        self._nameStorage = controller.nameStorage
+        self._dlList = controller.dlList
+        self._ui = controller.ui
+        self._selModel = self._ui.lvSeries.selectionModel()
+        self._ui.pubAddEpisode.setEnabled(False)
     
     def doConnections(self):
         ui = self._ui
@@ -128,22 +119,53 @@ class EpisodeController(QObject):
 
 class Controller(QObject):
     
-    nextEpisode = pyqtSignal(int)
-    currentSeason = pyqtSignal(int)
+    changedUrl = pyqtSignal()
     
     def __init__(self, dl_path=DL_PATH):
         QObject.__init__(self)
         self._gui = QMainWindow()
-        self._ui = Ui_MPLayerGui()
-        self._ui.setupUi(self._gui)
-        self._dlList = download.DownloadList(dl_path)
-        self._nameStorage = naming.SeriesStorage()
-        self._epiController = EpisodeController(self._ui, self._dlList,
-                                                self._nameStorage)
+        self.ui = Ui_MPLayerGui()
+        self.ui.setupUi(self._gui)
+        self.dlList = download.DownloadList(dl_path)
+        self.nameStorage = naming.SeriesStorage()
+        self._epiController = EpisodeController(self)
+        self.valid_url = False
+        #
+        self.ui.pubAddSimple.setEnabled(False)
+        self._ui.lvSeries.setModel(self.nameStorage)
         self._doConnections()
     
+    @pyqtSlot(QString)
+    def _changedSimpleName(self, text):
+        if text.isEmpty():
+            self.ui.pubAddSimple.setEnabled(False)
+        elif not self.ui.pubAddSimple.isEnabled():
+            self.updateSimpleButton()
+    
+    @pyqtSlot()
+    def _changedURL(self):
+        text = self.ui.pteUrl.toPlainText()
+        if text.isEmpty() and self.valid_url:
+            self.valid_url = False
+            self.changedUrl.emit()
+        else:
+            if not self.valid_url:
+                self.valid_url = True
+                self.changedUrl.emit()
+    
+    @pyqtSlot()
+    def _updateSimpleButton(self):
+        enabled = False
+        if self.valid_url and not self.ui.ledMName.text().isEmpty():
+            enabled = True
+        if self.ui.pubAddSimple.isEnabled != enabled:
+            self.ui.pubAddSimple.setEnabled(enabled)
+    
     def _doConnections(self):
+        self.ui.pteUrl.textChanged.connect(self._changedURL)
+        self.ui.ledMName.textChanged.connect(self._changedSimpleName)
         self._epiController.doConnections()
+        self.changedUrl.connect(self._updateSimpleButton)
     
     def show(self):
         self._gui.show()
@@ -157,29 +179,7 @@ class Controller(QObject):
         print "changed:", text
     
     @pyqtSlot()
-    def addEpisode(self):
-        uiName = self._ui.ledEName
-        series = self._nameStorage.getOrCreateSeries(uiName.text())
-        print series.name
-    
-    @pyqtSlot()
     def addSimple(self):
-        pass
-    
-    @pyqtSlot(QItemSelection, QItemSelection)
-    def selectedDownloadChanged(self, selected, deselected):
-        pass
-    
-    @pyqtSlot(QItemSelection, QItemSelection)
-    def selectedSeriesChanged(self, selected, deselected):
-        pass
-    
-    @pyqtSlot(int)
-    def userChangedEpisode(self, number):
-        pass
-    
-    @pyqtSlot(int)
-    def userChangedSeason(self, number):
         pass
 
 
