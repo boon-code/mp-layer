@@ -37,6 +37,8 @@ class SeriesInstance(DownloadInfo):
     _DBG_SUCCESS = "Download of file '%s' has been successful."
     _WRN_FAILURE = "Download of file '%s' has failed."
     
+    changedStatus = pyqtSignal()
+    
     def __init__(self, url, series, season, episode):
         filename = self._TNAME % (series.name, season, episode)
         DownloadInfo.__init__(self, url, filename)
@@ -44,6 +46,7 @@ class SeriesInstance(DownloadInfo):
         self.episode = episode
         self.season = season
         self.finished.connect(self.hasFinished)
+        self.removed.connect(self.removeInstance)
     
     def getName(self):
         return self._series.name
@@ -56,9 +59,14 @@ class SeriesInstance(DownloadInfo):
             _log.warning(self._WRN_FAILURE % self.getFilename())
         # Tell Series class about it (in either case)
         self._series.finishedInstance(self, succeeded)
+    
+    @pyqtSlot()
+    def removeInstance(self):
+        _log.debug("Removed instance %s" % self.getFilename())
+        self._series.removedInstance(self)
 
 
-class Series(object):
+class Series(QObject):
     
     _WRN_LDSKIP = "Skipping season %d (series: '%s'); Illegal list format."
     _WRN_ILLSEASON = "Skipping illegal season value '%s'"
@@ -66,7 +74,10 @@ class Series(object):
 (found type '%s')."
     _DBG_SKIP = "Skipping cause of exception '%s'."
     
+    changedHistory = pyqtSignal()
+    
     def __init__(self, name, curr_season=1, curr_episode=0):
+        QObject.__init__(self)
         self.name = name
         self.currentSeason = curr_season
         self.currentEpisode = curr_episode
@@ -98,6 +109,13 @@ class Series(object):
             # ensure that element is not in history
             if self.inHistory(season, episode):
                 self._removeFromHistory(season, episode)
+        self.changedHistory.emit()
+    
+    def removedInstance(self, instance):
+        entry = (instance.season, instance.episode)
+        self._instances.discard(entry)
+        _log.debug("Removed S%02dE%02d from instance list." % entry)
+        self.changedHistory.emit()
     
     def _removeFromHistory(self, season, episode):
         if self.inHistory(season, episode):
@@ -217,9 +235,10 @@ class SeriesStorage(QAbstractListModel):
         name = str(name)
         series = Series(name)
         self._series.append(series)
-        self._idbyname[name] = self._series.index(series)
+        index = self._series.index(series)
+        self._idbyname[name] = index
         self.reset()
-        return series
+        return index
     
     def _loadFile(self, path):
         with open(path, 'r') as f:
@@ -264,11 +283,12 @@ class SeriesStorage(QAbstractListModel):
             return (False, None)
     
     def getOrCreateSeries(self, name):
-        name = str(name)
+        name = unicode(name)
         if name in self._idbyname:
-            return self._series[self._idbyname[name]]
+            index = self._idbyname[name]
         else:
-            return self._addSeries(name)
+            index = self._addSeries(name)
+        return self.createIndex(index, 0)
     
     def data(self, index, role):
         if index.isValid() and role == Qt.DisplayRole:

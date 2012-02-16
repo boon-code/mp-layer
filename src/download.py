@@ -16,7 +16,8 @@ __docformat__ = "restructuredtext en"
 
 _log = logging.getLogger(__name__)
 
-_SIZE_PREFIX = ('B', 'KB', 'MB', 'GB', 'TB')
+_SIZE_MAX = (1024**5, 1024**4, 1024**3, 1024**2, 1024**1)
+_SIZE_PREFIX = ('TB', 'GB', 'MB', 'KB', 'B')
 
 
 class DownloadException(Exception):
@@ -50,6 +51,7 @@ class InvalidPathError(DownloadException):
 class DownloadInfo(QObject):
     
     finished = pyqtSignal(bool)
+    removed = pyqtSignal()
     
     def __init__(self, url, filename, dest_dir='.'):
         QObject.__init__(self)
@@ -99,6 +101,8 @@ class DownloadList(QAbstractListModel):
             if streamer.getStatus() & streamer.RUN_BIT == 0:
                 idx = self._idbypath.pop(str(streamer))
                 self._dllist.pop(idx)
+                self.reset()
+                streamer.discard()
     
     def kill(self, index):
         streamer = self.getStreamer(index)
@@ -133,7 +137,6 @@ class MPStreamer(QObject):
     
     _current_id = 0
     
-    finished = pyqtSignal(bool)
     changedStatus = pyqtSignal(int)
     
     @classmethod
@@ -242,31 +245,27 @@ class MPStreamer(QObject):
                 succeeded = True
         if self._status != old_status:
             self.changedStatus.emit(self._status)
-        self.finished.emit(succeeded)
+        self._info.finished.emit(succeeded)
     
-    def getSize(self, as_string=False):
+    def getSize(self, inc_unit=False):
         path = self._info.getPath()
         try:
             size = getsize(path)
-            if as_string:
-                idx = 0
-                while size > 1024:
-                    size /= 1024
-                    idx += 1
-                try:
-                    return "%d%s" % (size, _SIZE_PREFIX[idx])
-                except IndexError as ex:
-                    _log.debug("Need new entry for filesize?? -> %s"
-                               % str(ex))
-            if not as_string: return size
         except os.error as ex:
             _log.debug("Couldn't retrieve file size for '%s' -> %s"
                        % (path, str(ex)))
         else:
-            
+            if as_string:
+                idx = 0
+                for (i, v) in enumerate(_SIZE_MAX):
+                    if (size // v) > 0:
+                        return u"%d%s" % ((size / v), _SIZE_PREFIX[i])
     
     def kill(self):
         self._proc.kill()
+    
+    def discard(self):
+        self._info.removed.emit()
     
     def getStatus(self):
         return self._status

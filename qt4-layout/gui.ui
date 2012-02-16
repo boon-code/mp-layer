@@ -54,7 +54,7 @@
              </size>
             </property>
             <property name="text">
-             <string>Current Status</string>
+             <string/>
             </property>
             <property name="alignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -64,6 +64,13 @@
             </property>
             <property name="textInteractionFlags">
              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="labSize">
+            <property name="text">
+             <string/>
             </property>
            </widget>
           </item>
@@ -432,7 +439,7 @@
      <x>0</x>
      <y>0</y>
      <width>915</width>
-     <height>23</height>
+     <height>29</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
