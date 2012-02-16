@@ -2,7 +2,6 @@ import logging
 from os.path import exists
 from PyQt4.QtCore import (QObject, pyqtSlot, pyqtSignal, QProcess, Qt)
 
-
 __author__ = 'Manuel Huber'
 __copyright__ = "Copyright (c) 2012 Manuel Huber."
 __license__ = 'GPLv2'
@@ -34,7 +33,6 @@ class ExtGuesser(object):
     _MFLV = "video/x-flv"
     _TFLV = "Macromedia Flash Video"
     
-    
     def __init__(self, path):
         self._path = path
         self._proc = QProcess()
@@ -43,14 +41,14 @@ class ExtGuesser(object):
     
     def _guessExtension(self, text, mime):
         if text.find(self._TAVI) >= 0:
-            return "avi"
+            return 'avi'
         elif mime.find(self._MMP4) >= 0:
-            return "mp4"
+            return 'mp4'
         elif ((mime.find(self._MFLV) >= 0) and 
               (text.find(self._TFLV) >= 0)):
-            return "flv"
+            return 'flv'
         else:
-            return "unk"
+            return 'unk'
     
     def get(self):
         self._proc.start("file", ["-b", self._path])

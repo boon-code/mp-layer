@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import os
 import logging
 
 _DEFAULT_LOG_FORMAT = "%(name)s : %(threadName)s : %(levelname)s \
@@ -14,6 +15,7 @@ from PyQt4.QtGui import (QItemSelection, QMainWindow, QApplication,
                          QItemSelectionModel)
 from PyQt4 import QtGui
 from gui import Ui_MPLayerGui
+from os.path import isdir
 import naming
 import download
 
@@ -25,7 +27,7 @@ __version__ = '0.0.0'
 __docformat__ = "restructuredtext en"
 
 
-DL_PATH = ""
+DL_PATH = os.getcwd()
 
 
 class EpisodeController(QObject):
@@ -112,18 +114,46 @@ class Controller(QObject):
     
     changedURL = pyqtSignal()
     
-    def __init__(self, dl_path=DL_PATH):
+    def __init__(self, dl_path=DL_PATH, autostart=True):
         QObject.__init__(self)
         self._gui = QMainWindow()
+        self._autostart = autostart
+        self._dlpath = dl_path
         self.ui = Ui_MPLayerGui()
         self.ui.setupUi(self._gui)
-        self.dlList = download.DownloadList(dl_path)
+        self.dlList = download.DownloadList()
         self.nameStorage = naming.SeriesStorage()
         self.valid_url = False
+        # init-settings
         self.ui.pubAddSimple.setEnabled(False)
+        self.ui.pubStart.setEnabled(False)
+        self.ui.pubKill.setEnabled(False)
+        self.ui.pubRemove.setEnabled(False)
+        #
         self.ui.lvSeries.setModel(self.nameStorage)
         self._epiController = EpisodeController(self)
+        self.ui.lvDownloads.setModel(self.dlList)
+        self._selDM = self.ui.lvDownloads.selectionModel()
         self._doConnections()
+        
+    
+    def _doConnections(self):
+        self.ui.pteUrl.textChanged.connect(self._changedURL)
+        self.ui.ledMName.textChanged.connect(self._updateSimpleButton)
+        self._epiController.doConnections()
+        self.changedURL.connect(self._updateSimpleButton)
+        self._selDM.currentChanged.connect(self._selectedDLChanged)
+        self.ui.pubAddSimple.clicked.connect(self._addSimple)
+    
+    @pyqtSlot(bool)
+    def setAutostart(self, autostart):
+        self._autostart = autostart
+    
+    @pyqtSlot(QString)
+    def setDLPath(self, path):
+        path = str(path)
+        if isdir(path):
+            self._dlpath = path
     
     @pyqtSlot()
     def _changedURL(self):
@@ -154,26 +184,65 @@ class Controller(QObject):
         if self.ui.pubAddSimple.isEnabled != enabled:
             self.ui.pubAddSimple.setEnabled(enabled)
     
-    def _doConnections(self):
-        self.ui.pteUrl.textChanged.connect(self._changedURL)
-        self.ui.ledMName.textChanged.connect(self._updateSimpleButton)
-        self._epiController.doConnections()
-        self.changedURL.connect(self._updateSimpleButton)
+    # TODO: continue here!
+    @pyqtSlot()
+    def _updateDlSelection(self):
+        start = False
+        kill = False
+        remove = False
+        text = "Select an item for more information..."
+        index = self._selDM.currentIndex()
+        streamer = self.dlList.getStreamer(index)
+        if streamer is not None:
+            status = streamer.getStatus()
+            if status & streamer.RUN_BIT:
+                kill = True
+                text = ("Download in progress...\nCurrent size: %d%s"
+                        % (
+            elif status & streamer.FIN_BIT:
+                if status & streamer.ERROR_BIT:
+                    start = True
+                    
+                remove = True
+            else:
+                start = True
+                remove = True
+    
+    @pyqtSlot(QModelIndex, QModelIndex)
+    def _selectedDLChanged(self, sel, desl):
+        start = False
+        kill = False
+        remove = False
+        streamer = self.dlList.getStreamer(sel)
+        if streamer is not None:
+            status = streamer.getStatus()
+            if status & streamer.RUN_BIT:
+                kill = True
+            elif status & streamer.FIN_BIT:
+                if status & streamer.ERROR_BIT: start = True
+                remove = True
+            else:
+                start = True
+                remove = True
+        self.ui.pubStart.setEnabled(start)
+        self.ui.pubKill.setEnabled(kill)
+        self.ui.pubRemove.setEnabled(remove)
+    
+    @pyqtSlot()
+    def _addSimple(self):
+        """Called if a simple download has been enqueued.
+        
+        """
+        if self.valid_url and not self.ui.ledMName.text().isEmpty():
+            url = str(self.ui.pteUrl.toPlainText())
+            name = str(self.ui.ledMName.text())
+            dlinfo = download.DownloadInfo(url, name, self._dlpath)
+            index = self.dlList.add(dlinfo)
+            if self._autostart:
+                self.dlList.start(index)
     
     def show(self):
         self._gui.show()
-    
-    def convertName(self, name, is_episode=False):
-        pass
-    
-    @pyqtSlot(QString)
-    def changedEpisodeName(self, text):
-        
-        print "changed:", text
-    
-    @pyqtSlot()
-    def addSimple(self):
-        pass
 
 
 def main():

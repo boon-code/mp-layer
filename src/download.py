@@ -2,8 +2,7 @@ import logging
 import os
 import filetype
 from subprocess import Popen
-from os.path import join, isdir, exists, split
-from os import rename
+from os.path import join, isdir, exists, split, getsize
 from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel, Qt,
                           QVariant, pyqtSlot, QProcess, QModelIndex)
 
@@ -16,7 +15,8 @@ __docformat__ = "restructuredtext en"
 
 
 _log = logging.getLogger(__name__)
-_DEFAULT_PATH = os.getcwd()
+
+_SIZE_PREFIX = ('B', 'KB', 'MB', 'GB', 'TB')
 
 
 class DownloadException(Exception):
@@ -49,11 +49,11 @@ class InvalidPathError(DownloadException):
 
 class DownloadInfo(QObject):
     
-    finished = pyqtSignal('bool')
+    finished = pyqtSignal(bool)
     
     def __init__(self, url, filename, dest_dir='.'):
         QObject.__init__(self)
-        self.dest_dir = dest_dir
+        self.destDir = dest_dir
         self._url = url
         self._filename = filename
     
@@ -64,40 +64,34 @@ class DownloadInfo(QObject):
         return self._filename
     
     def getPath(self):
-        return join(self.dest_dir, self._filename)
+        return join(self.destDir, self._filename)
 
 
 class DownloadList(QAbstractListModel):
     
     invalidDLPath = pyqtSignal()
     
-    def __init__(self, dl_path=_DEFAULT_PATH, autostart=True):
+    def __init__(self):
         QAbstractListModel.__init__(self, None)
-        self._dlpath = dl_path
-        self._autostart = autostart
         self._dllist = list()
         self._idbypath = dict()
     
-    @pyqtSlot('bool')
-    def setAutostart(self, autostart):
-        self._autostart = autostart
-    
-    @pyqtSlot('QString')
-    def setDLPath(self, path):
-        path = str(path)
-        if isdir(path):
-            self._dlpath = path
-    
     def add(self, dlinfo):
-        dlinfo.dest_dir = self._dlpath
         name = dlinfo.getFilename()
         if name in self._idbypath:
             raise AlreadyAddedError(name)
         else:
             streamer = MPStreamer(dlinfo)
             self._dllist.append(streamer)
-            self._idbypath[name] = self._dllist.index(streamer)
+            idx = self._dllist.index(streamer)
+            self._idbypath[name] = idx
             self.reset()
+            return self.createIndex(idx, 0)
+    
+    def start(self, index):
+        streamer = self.getStreamer(index)
+        if streamer is not None:
+            streamer.start()
     
     def remove(self, index):
         streamer = self.getStreamer(index)
@@ -184,7 +178,7 @@ class MPStreamer(QObject):
         self._lerror = None
         if self._status & self.RUN_BIT:
             raise AlreadyRunningError(self._info.getPath())
-        elif exists(self._path) and (not overwrite):
+        elif exists(self._info.getPath()) and (not overwrite):
             raise FileExistsError(self._info.getPath())
         else:
             if self._status & self.FIN_BIT:
@@ -206,7 +200,7 @@ class MPStreamer(QObject):
     
     def _receivedProcessErrorMsg(self):
         # BAD: I should find some better way to check...
-        if self._lerror.find("Failed to open"):
+        if self._lerror.find("Failed to open") != -1:
             return True
         else:
             return False
@@ -244,11 +238,32 @@ class MPStreamer(QObject):
             else:
                 _log.debug("Renaming '%s' to '%s'."
                            % (path, path + "." + ext))
-                rename(path, path + "." + ext)
+                os.rename(path, path + "." + ext)
                 succeeded = True
         if self._status != old_status:
             self.changedStatus.emit(self._status)
         self.finished.emit(succeeded)
+    
+    def getSize(self, as_string=False):
+        path = self._info.getPath()
+        try:
+            size = getsize(path)
+            if as_string:
+                idx = 0
+                while size > 1024:
+                    size /= 1024
+                    idx += 1
+                try:
+                    return "%d%s" % (size, _SIZE_PREFIX[idx])
+                except IndexError as ex:
+                    _log.debug("Need new entry for filesize?? -> %s"
+                               % str(ex))
+            if not as_string: return size
+        except os.error as ex:
+            _log.debug("Couldn't retrieve file size for '%s' -> %s"
+                       % (path, str(ex)))
+        else:
+            
     
     def kill(self):
         self._proc.kill()
