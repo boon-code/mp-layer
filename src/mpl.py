@@ -9,7 +9,7 @@ logging.basicConfig(stream=sys.stderr, format=_DEFAULT_LOG_FORMAT
      , level=logging.DEBUG)
 
 from PyQt4.QtCore import (QObject, SIGNAL, SLOT, pyqtSlot, 
-                          pyqtSignal, QString)
+                          pyqtSignal, QString, QModelIndex)
 from PyQt4.QtGui import (QItemSelection, QMainWindow, QApplication,
                          QItemSelectionModel)
 from PyQt4 import QtGui
@@ -47,25 +47,12 @@ class EpisodeController(QObject):
         ui.ledEName.textChanged.connect(self.changedEpisodeName)
         ui.spnEpisode.valueChanged.connect(self.checkEpisode)
         ui.spnSeason.valueChanged.connect(self.checkEpisode)
-        QObject.connect(ui.ledEName, SIGNAL("textChanged(QString)"),
-                        self.changedEpisodeName)
-        QObject.connect(ui.pteUrl, SIGNAL("textChanged()"),
-                        self.changedURL)
-        QObject.connect(ui.spnEpisode, SIGNAL("valueChanged(int)"),
-                        self.checkEpisode)
-        QObject.connect(ui.spnSeason, SIGNAL("valueChanged(int)"),
-                        self.checkEpisode)
-        QObject.connect(ui.pubAddEpisode, SIGNAL("clicked()"),
-                        self.addEpisode)
-        QObject.connect(self._selModel,
-                        SIGNAL("currentChanged(QModelIndex, QModelIndex)"),
-                        self.selectedEpisodeChanged)
+        self._ctrl.changedURL.connect(self._updateEpisode)
+        ui.pubAddEpisode.clicked.connect(self.addEpisode)
+        model = self._selModel
+        model.currentChanged.connect(self.selectedEpisodeChanged)
     
-    @pyqtSlot()
-    def changedURL(self):
-        self._updateEpisode()
-    
-    @pyqtSlot()
+    @pyqtSlot(QModelIndex, QModelIndex)
     def selectedEpisodeChanged(self, sel, desl):
         series = self._nameStorage.get(sel)
         if series is not None:
@@ -110,6 +97,7 @@ class EpisodeController(QObject):
                     text = "Has already been downloaded once!"
         ui.labEInstance.setText(text)
     
+    @pyqtSlot()
     def _updateEpisode(self):
         ui = self._ui
         enabled = True
@@ -137,15 +125,14 @@ class Controller(QObject):
         self._epiController = EpisodeController(self)
         self._doConnections()
     
-    @pyqtSlot(QString)
-    def _changedSimpleName(self, text):
-        if text.isEmpty():
-            self.ui.pubAddSimple.setEnabled(False)
-        elif not self.ui.pubAddSimple.isEnabled():
-            self._updateSimpleButton()
-    
     @pyqtSlot()
     def _changedURL(self):
+        """URL has been changed.
+        
+        This slot checks if the url widget is empty, and 
+        sends out a signal if the empty status changed since
+        the last message.
+        """
         url_empty = self.ui.pteUrl.toPlainText().isEmpty()
         if url_empty and self.valid_url:
             self.valid_url = False
@@ -156,6 +143,11 @@ class Controller(QObject):
     
     @pyqtSlot()
     def _updateSimpleButton(self):
+        """This slot checks if simple download button should be enabled.
+        
+        This slot reads the valid_url member and checks the current
+        status (empty?) of the LineEdit ledMName.
+        """
         enabled = False
         if self.valid_url and not self.ui.ledMName.text().isEmpty():
             enabled = True
@@ -164,7 +156,7 @@ class Controller(QObject):
     
     def _doConnections(self):
         self.ui.pteUrl.textChanged.connect(self._changedURL)
-        self.ui.ledMName.textChanged.connect(self._changedSimpleName)
+        self.ui.ledMName.textChanged.connect(self._updateSimpleButton)
         self._epiController.doConnections()
         self.changedURL.connect(self._updateSimpleButton)
     
