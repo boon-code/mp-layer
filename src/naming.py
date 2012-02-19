@@ -216,7 +216,7 @@ class Series(QObject):
     
     def _createJsonHistoryObject(self):
         history = dict()
-        for (season, episodes) in self._history:
+        for (season, episodes) in self._history.items():
             history[season] = tuple(episodes)
         return history
     
@@ -268,10 +268,14 @@ class SeriesStorage(QAbstractListModel):
                 _log.warning(self._WRN_SKIPENTRY % (str(ex.name),
                                                     str(ex.wtype)))
     
-    def store(self, path):
+    def _createJsonHistory(self):
         jobj = dict()
         for series in self._series:
             jobj[series.name] = series.getData()
+        return jobj
+    
+    def store(self, path):
+        jobj = self._createJsonHistory()
         with open(path, 'w') as f:
             json.dump(jobj, f)
     

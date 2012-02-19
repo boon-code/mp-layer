@@ -91,14 +91,13 @@ def testInteractive():
     import PyQt4.QtCore as core
     import PyQt4.QtGui as gui
     app = gui.QApplication(sys.argv)
-    a = sys.argv[1]
-    storepath = join(a, STORAGE_FILE)
+    path = sys.argv[1]
+    storepath = join(path, STORAGE_FILE)
     gui.qApp = app
-    c = mpl.Controller()
-    c.setDLPath(storepath)
+    c = mpl.Controller(store_file=storepath)
+    c.setDLPath(path)
     c.show()
     n = c.nameStorage
-    if exists(storepath): n.load(storepath)
     dl = c.dlList
     inf = d.DownloadInfo("url", "bla", "path")
     streamer = TestStreamer(inf)
@@ -107,7 +106,6 @@ def testInteractive():
     dl._idbypath[inf.getFilename()] = idx
     dl.reset()
     ret = app.exec_()
-    n.store(storepath)
     del n
     del c
     del dl

@@ -12,13 +12,14 @@ logging.basicConfig(stream=sys.stderr, format=_DEFAULT_LOG_FORMAT
 from PyQt4.QtCore import (QObject, SIGNAL, SLOT, pyqtSlot, 
                           pyqtSignal, QString, QModelIndex, QTimer)
 from PyQt4.QtGui import (QItemSelection, QMainWindow, QApplication,
-                         QItemSelectionModel)
+                         QItemSelectionModel, qApp, QMessageBox)
 from PyQt4 import QtGui
 from gui import Ui_MPLayerGui
-from os.path import isdir
+from os.path import isdir, join
 import naming
 import download
 
+_log = logging.getLogger(__name__)
 
 __author__ = 'Manuel Huber'
 __copyright__ = "Copyright (c) 2012 Manuel Huber."
@@ -28,6 +29,7 @@ __docformat__ = "restructuredtext en"
 
 
 DL_PATH = os.getcwd()
+STORAGE_PATH = join(os.getcwd(), "mpl-storage.json")
 
 
 class EpisodeController(QObject):
@@ -137,11 +139,13 @@ class Controller(QObject):
     
     changedURL = pyqtSignal()
     
-    def __init__(self, dl_path=DL_PATH, autostart=True):
+    def __init__(self, dl_path=DL_PATH, store_file=STORAGE_PATH,
+                 autostart=True):
         QObject.__init__(self)
         self._gui = QMainWindow()
         self._autostart = autostart
         self._dlpath = dl_path
+        self._store_file = store_file
         self.ui = Ui_MPLayerGui()
         self.ui.setupUi(self._gui)
         self.dlList = download.DownloadList()
@@ -160,7 +164,17 @@ class Controller(QObject):
         self.ui.lvDownloads.setModel(self.dlList)
         self._selDM = self.ui.lvDownloads.selectionModel()
         self._doConnections()
-        
+        self._loadHistory()
+    
+    def _loadHistory(self):
+        try:
+            self.nameStorage.load(self._store_file)
+        except IOError as ex:
+            _log.info("Couldn't load history: '%s'" % str(ex))
+    
+    @pyqtSlot()
+    def _storeHistory(self):
+        self.nameStorage.store(self._store_file)
     
     def _doConnections(self):
         self.ui.pteUrl.textChanged.connect(self._changedURL)
@@ -173,6 +187,7 @@ class Controller(QObject):
         self.ui.pubStart.clicked.connect(self._startDownload)
         self.ui.pubKill.clicked.connect(self._killDownload)
         self._timer.timeout.connect(self._updateDlSelection)
+        qApp.aboutToQuit.connect(self._storeHistory)
     
     @pyqtSlot(bool)
     def setAutostart(self, autostart):
@@ -183,6 +198,9 @@ class Controller(QObject):
         path = str(path)
         if isdir(path):
             self._dlpath = path
+            _log.debug("Setting Download Path to '%s'." % path)
+        else:
+            _log.warning("'%s' isn't a directory" % path)
     
     @pyqtSlot()
     def _changedURL(self):
@@ -259,9 +277,7 @@ class Controller(QObject):
     @pyqtSlot()
     def _startDownload(self):
         index = self._selDM.currentIndex()
-        streamer = self.dlList.getStreamer(index)
-        if streamer is not None:
-            streamer.start()
+        self._startSpecificStream(index)
     
     @pyqtSlot()
     def _killDownload(self):
@@ -279,6 +295,14 @@ class Controller(QObject):
             self._selDM.clear()
             self.dlList.remove(index)
     
+    def _startSpecificStream(self, index):
+        try:
+            self.dlList.start(index)
+        except FileExistsError as ex:
+            reply = QMessageBox.question(self, 'Overwrite?',
+                    "File '%s' exists! Overwrite?" % ex.path,
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+    
     def download(self, dlinfo):
         """Add download to list (and eventually start it)
         
@@ -290,7 +314,7 @@ class Controller(QObject):
         self._selDM.setCurrentIndex(index, 
                 QItemSelectionModel.SelectCurrent)
         if self._autostart:
-            self.dlList.start(index)
+            self._startSpecificStream(index)
     
     @pyqtSlot()
     def _addSimple(self):
