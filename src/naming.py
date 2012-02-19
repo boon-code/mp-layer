@@ -214,10 +214,16 @@ class Series(QObject):
         for i in rm_list:
             self._history.pop(i, None)
     
+    def _createJsonHistoryObject(self):
+        history = dict()
+        for (season, episodes) in self._history:
+            history[season] = tuple(episodes)
+        return history
+    
     def getData(self):
         obj = dict()
         self._normalizeHistory()
-        obj['history'] = copy.deepcopy(self._history)
+        obj['history'] = self._createJsonHistoryObject()
         obj['last'] = (self.currentSeason, self.currentEpisode)
         return obj
 
@@ -267,7 +273,7 @@ class SeriesStorage(QAbstractListModel):
         for series in self._series:
             jobj[series.name] = series.getData()
         with open(path, 'w') as f:
-            json.dump(self._series, f)
+            json.dump(jobj, f)
     
     def get(self, index):
         if index.isValid():

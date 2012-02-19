@@ -104,7 +104,7 @@ class EpisodeController(QObject):
                 season = ui.spnSeason.value()
                 episode = ui.spnEpisode.value()
                 if series.inProgress(season, episode):
-                    text = u"This Episode is just downloading"
+                    text = u"Has already been added to list!"
                     enabled = False
                 elif series.inHistory(ui.spnSeason.value(),
                                     ui.spnEpisode.value()):
@@ -222,11 +222,11 @@ class Controller(QObject):
         size_str = u""
         streamer = self.dlList.getStreamer(index)
         if streamer is not None:
-            size = streamer.getSize(inc_unit=True)
-            if size is not None:
-                size_str = u"Current size: %s" % size
             status = streamer.getStatus()
             if status & streamer.RUN_BIT:
+                size = streamer.getSize(inc_unit=True)
+                if size is not None:
+                    size_str = u"Current size: %s" % size
                 kill = True
                 text = u"Download in progress..."
             elif status & streamer.FIN_BIT:
@@ -285,6 +285,7 @@ class Controller(QObject):
         This method can be used to download 
         :param dlinfo: Download information for streamer.
         """
+        dlinfo.destDir = self._dlpath
         index = self.dlList.add(dlinfo)
         self._selDM.setCurrentIndex(index, 
                 QItemSelectionModel.SelectCurrent)

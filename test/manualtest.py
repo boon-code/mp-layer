@@ -11,7 +11,7 @@ logging.basicConfig(stream=sys.stderr, format=_DEFAULT_LOG_FORMAT
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from os.path import split, normpath, join
+from os.path import split, normpath, join, exists
 
 class TestStreamer(QObject):
     
@@ -83,6 +83,7 @@ class TestStreamer(QObject):
     def getStatus(self):
         return self._status
 
+STORAGE_FILE = "mpl-storage.json"
 
 def testInteractive():
     import mpl
@@ -90,12 +91,14 @@ def testInteractive():
     import PyQt4.QtCore as core
     import PyQt4.QtGui as gui
     app = gui.QApplication(sys.argv)
+    a = sys.argv[1]
+    storepath = join(a, STORAGE_FILE)
     gui.qApp = app
     c = mpl.Controller()
+    c.setDLPath(storepath)
     c.show()
     n = c.nameStorage
-    for i in range(1,100):
-        s = n.getOrCreateSeries("Serie%d" % i)
+    if exists(storepath): n.load(storepath)
     dl = c.dlList
     inf = d.DownloadInfo("url", "bla", "path")
     streamer = TestStreamer(inf)
@@ -104,7 +107,10 @@ def testInteractive():
     dl._idbypath[inf.getFilename()] = idx
     dl.reset()
     ret = app.exec_()
+    n.store(storepath)
+    del n
     del c
+    del dl
     del app
     sys.exit(ret)
 

@@ -16,7 +16,7 @@ __docformat__ = "restructuredtext en"
 
 _log = logging.getLogger(__name__)
 
-_SIZE_MAX = (1024**5, 1024**4, 1024**3, 1024**2, 1024**1)
+_SIZE_MAX = (1024**4, 1024**3, 1024**2, 1024**1, 1)
 _SIZE_PREFIX = ('TB', 'GB', 'MB', 'KB', 'B')
 
 
@@ -255,11 +255,11 @@ class MPStreamer(QObject):
             _log.debug("Couldn't retrieve file size for '%s' -> %s"
                        % (path, str(ex)))
         else:
-            if as_string:
+            if inc_unit:
                 idx = 0
                 for (i, v) in enumerate(_SIZE_MAX):
                     if (size // v) > 0:
-                        return u"%d%s" % ((size / v), _SIZE_PREFIX[i])
+                        return u"%d %s" % ((size / v), _SIZE_PREFIX[i])
     
     def kill(self):
         self._proc.kill()
