@@ -89,12 +89,15 @@ class Series(QObject):
         self._instances = set()
     
     def createInstance(self, url, season, episode):
-        entry = (int(season), int(episode))
+        season = int(season)
+        episode = int(episode)
+        entry = (season, episode)
         if entry not in self._instances:
             _log.debug("created instance '%s.S%02dE%02d'."
                         % (self.name, season, episode))
             self._instances.add(entry)
-            inst = SeriesInstance(str(url), self, int(season), int(episode))
+            # TODO: Maybe change to unicode
+            inst = SeriesInstance(str(url), self, season, episode)
             return inst
         else:
             _log.info("'%s.S%02dE%02d' is being downloaded."
@@ -194,7 +197,7 @@ class Series(QObject):
     
     def mergeData(self, data):
         try:
-            self._tryLoadLast(data)
+            last = self._tryLoadLast(data)
             self.currentSeason = last[0]
             self.currentEpisode = last[1]
         except WrongJSOError as ex:
@@ -256,14 +259,16 @@ class SeriesStorage(QAbstractListModel):
             raise WrongJSOError("root", type(jobj))
         for (name, obj) in jobj.items():
             try:
-                if not isinstance(name, str):
+                if not isinstance(name, unicode):
                     raise WrongJSOError("name", type(name))
                 if not isinstance(obj, dict):
                     raise WrongJSOError(name, type(obj))
                 
                 if name not in self._idbyname:
                     self._addSeries(name)
-                self.mergeData(obj)
+                index = self._idbyname[name]
+                series = self._series[index]
+                series.mergeData(obj)
             except WrongJSOError as ex:
                 _log.warning(self._WRN_SKIPENTRY % (str(ex.name),
                                                     str(ex.wtype)))

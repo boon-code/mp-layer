@@ -90,10 +90,10 @@ class DownloadList(QAbstractListModel):
             self.reset()
             return self.createIndex(idx, 0)
     
-    def start(self, index):
+    def start(self, index, overwrite=False):
         streamer = self.getStreamer(index)
         if streamer is not None:
-            streamer.start()
+            streamer.start(overwrite=overwrite)
     
     def remove(self, index):
         streamer = self.getStreamer(index)

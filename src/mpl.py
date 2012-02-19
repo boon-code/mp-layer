@@ -99,8 +99,7 @@ class EpisodeController(QObject):
         text = u""
         enabled = False
         ui = self._ui
-        if self._ctrl.valid_url and not ui.ledEName.text().isEmpty():
-            enabled = True
+        if not ui.ledEName.text().isEmpty():
             series = self._nameStorage.get(self._selModel.currentIndex())
             if series is not None:
                 season = ui.spnSeason.value()
@@ -108,9 +107,10 @@ class EpisodeController(QObject):
                 if series.inProgress(season, episode):
                     text = u"Has already been added to list!"
                     enabled = False
-                elif series.inHistory(ui.spnSeason.value(),
-                                    ui.spnEpisode.value()):
+                elif series.inHistory(season, episode):
                     text = u"Has already been downloaded once!"
+            if self._ctrl.valid_url:
+                enabled = True
         if self._ui.pubAddEpisode.isEnabled != enabled:
             self._ui.pubAddEpisode.setEnabled(enabled)
         ui.labEInstance.setText(text)
@@ -298,10 +298,13 @@ class Controller(QObject):
     def _startSpecificStream(self, index):
         try:
             self.dlList.start(index)
-        except FileExistsError as ex:
-            reply = QMessageBox.question(self, 'Overwrite?',
+        except download.FileExistsError as ex:
+            reply = QMessageBox.question(self._gui, 'Overwrite?',
                     "File '%s' exists! Overwrite?" % ex.path,
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                self.dlList.start(index, overwrite=True)
+            
     
     def download(self, dlinfo):
         """Add download to list (and eventually start it)
