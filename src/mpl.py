@@ -187,6 +187,7 @@ class Controller(QObject):
         self.ui.pubStart.clicked.connect(self._startDownload)
         self.ui.pubKill.clicked.connect(self._killDownload)
         self._timer.timeout.connect(self._updateDlSelection)
+        self.ui.pteUrl.pasteText.connect(self.ui.pteUrl.setPlainText)
         qApp.aboutToQuit.connect(self._storeHistory)
     
     @pyqtSlot(bool)
