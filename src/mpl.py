@@ -188,6 +188,7 @@ class Controller(QObject):
         self.ui.pubKill.clicked.connect(self._killDownload)
         self._timer.timeout.connect(self._updateDlSelection)
         self.ui.pteUrl.pasteText.connect(self.ui.pteUrl.setPlainText)
+        self.ui.pubMplayer.clicked.connect(self._playStream)
         qApp.aboutToQuit.connect(self._storeHistory)
     
     @pyqtSlot(bool)
@@ -236,6 +237,7 @@ class Controller(QObject):
         start = False
         kill = False
         remove = False
+        catstream = False
         text = u"Select an item for more information..."
         index = self._selDM.currentIndex()
         size_str = u""
@@ -247,6 +249,7 @@ class Controller(QObject):
                 if size is not None:
                     size_str = u"Current size: %s" % size
                 kill = True
+                catstream = True
                 text = u"Download in progress..."
             elif status & streamer.FIN_BIT:
                 if status & streamer.ERROR_BIT:
@@ -262,6 +265,7 @@ class Controller(QObject):
         self.ui.pubStart.setEnabled(start)
         self.ui.pubKill.setEnabled(kill)
         self.ui.pubRemove.setEnabled(remove)
+        self.ui.pubMplayer.setEnabled(catstream)
         self.ui.labStatus.setText(text)
         self.ui.labSize.setText(size_str)
     
@@ -331,9 +335,15 @@ class Controller(QObject):
             dlinfo = download.DownloadInfo(url, name, self._dlpath)
             self.download(dlinfo)
     
+    @pyqtSlot()
+    def _playStream(self):
+        index = self._selDM.currentIndex()
+        streamer = self.dlList.getStreamer(index)
+        if streamer is not None:
+            streamer.playStream()
+    
     def show(self):
         self._gui.show()
-
 
 def main():
     app = QApplication(sys.argv)

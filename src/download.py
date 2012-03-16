@@ -168,6 +168,8 @@ class MPStreamer(QObject):
         self._status = self._READY
         self._lerror = None
         self._doConnections()
+        self._play_proc = QProcess()
+        self._cat_proc = QProcess()
     
     def __str__(self):
         return self._info.getFilename()
@@ -246,6 +248,12 @@ class MPStreamer(QObject):
         if self._status != old_status:
             self.changedStatus.emit(self._status)
         self._info.finished.emit(succeeded)
+    
+    def playStream(self, cat="cat"):
+        self._cat_proc.setStandardOutputProcess(self._play_proc)
+        self._cat_proc.start(cat, [self._info.getPath()])
+        self._play_proc.start("mplayer", ["-fs", "-"])
+
     
     def getSize(self, inc_unit=False):
         path = self._info.getPath()

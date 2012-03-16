@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './qt4-layout/gui.ui'
 #
-# Created: Sun Feb 19 23:29:45 2012
+# Created: Fri Mar 16 21:45:49 2012
 #      by: PyQt4 UI code generator 4.7.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -90,6 +90,9 @@ class Ui_MPLayerGui(object):
         self.pubRemove.setMinimumSize(QtCore.QSize(140, 0))
         self.pubRemove.setObjectName("pubRemove")
         self.gridLayout_2.addWidget(self.pubRemove, 1, 0, 1, 1)
+        self.pubMplayer = QtGui.QPushButton(self.grpDownloadArea)
+        self.pubMplayer.setObjectName("pubMplayer")
+        self.gridLayout_2.addWidget(self.pubMplayer, 1, 1, 1, 1)
         self.verticalLayout_5.addLayout(self.gridLayout_2)
         self.horizontalLayout_5.addWidget(self.grpDownloadArea)
         self.grpAddArea = QtGui.QGroupBox(self.centralwidget)
@@ -247,6 +250,7 @@ class Ui_MPLayerGui(object):
         self.pubStart.setText(QtGui.QApplication.translate("MPLayerGui", "Start", None, QtGui.QApplication.UnicodeUTF8))
         self.pubKill.setText(QtGui.QApplication.translate("MPLayerGui", "Kill", None, QtGui.QApplication.UnicodeUTF8))
         self.pubRemove.setText(QtGui.QApplication.translate("MPLayerGui", "Remove", None, QtGui.QApplication.UnicodeUTF8))
+        self.pubMplayer.setText(QtGui.QApplication.translate("MPLayerGui", "stream > mplayer", None, QtGui.QApplication.UnicodeUTF8))
         self.grpAddArea.setTitle(QtGui.QApplication.translate("MPLayerGui", "Add new Download:", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox.setTitle(QtGui.QApplication.translate("MPLayerGui", "URL:", None, QtGui.QApplication.UnicodeUTF8))
         self.labEName.setText(QtGui.QApplication.translate("MPLayerGui", "Name:", None, QtGui.QApplication.UnicodeUTF8))
