@@ -58,7 +58,7 @@ class TestStreamer(QObject):
     
     @pyqtSlot()
     def _next(self):
-        if self._size > 7:
+        if self._size > 50:
             self._status = self.FIN_BIT
             self.changedStatus.emit(self._status)
             self._info.finished.emit(True)
@@ -75,7 +75,6 @@ class TestStreamer(QObject):
             self._status = self._FINISHED_ERR
             self._timer.stop()
             self.changedStatus.emit(self._status)
-            self.finished.emit(False)
     
     def discard(self):
         self._info.removed.emit()
@@ -101,6 +100,7 @@ def testInteractive():
     dl = c.dlList
     inf = d.DownloadInfo("url", "bla", "path")
     streamer = TestStreamer(inf)
+    streamer.changedStatus.connect(dl._streamerStatusChanged)
     dl._dllist.append(streamer)
     idx = dl._dllist.index(streamer)
     dl._idbypath[inf.getFilename()] = idx

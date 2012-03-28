@@ -72,11 +72,13 @@ class DownloadInfo(QObject):
 class DownloadList(QAbstractListModel):
     
     invalidDLPath = pyqtSignal()
+    safeToExit = pyqtSignal(bool)
     
     def __init__(self):
         QAbstractListModel.__init__(self, None)
         self._dllist = list()
         self._idbypath = dict()
+        self._safeToExit = True
     
     def add(self, dlinfo):
         name = dlinfo.getFilename()
@@ -87,6 +89,12 @@ class DownloadList(QAbstractListModel):
             self._dllist.append(streamer)
             idx = self._dllist.index(streamer)
             self._idbypath[name] = idx
+            # Added safe to exit feature...
+            streamer.changedStatus.connect(self._streamerStatusChanged)
+            if self._safeToExit:
+                self._safeToExit = False
+                self.safeToExit.emit(False)
+            # ---
             self.reset()
             return self.createIndex(idx, 0)
     
@@ -122,7 +130,25 @@ class DownloadList(QAbstractListModel):
     
     def rowCount(self, parent=QModelIndex()):
         return len(self._dllist)
-
+    
+    def _getExitStatus(self):
+        for streamer in self._dllist:
+            if not (streamer.getStatus() & streamer.FIN_BIT):
+                return False
+        return True
+    
+    @pyqtSlot(int)
+    def _streamerStatusChanged(self, status):
+        _log.debug("status-changed")
+        oldsafe = self._safeToExit
+        if oldsafe:
+            if not (status & MPStreamer.FIN_BIT):
+                self._safeToExit = False
+        else:
+            self._safeToExit = self._getExitStatus()
+        if oldsafe != self._safeToExit:
+            self.safeToExit.emit(self._safeToExit)
+            
 
 class MPStreamer(QObject):
     

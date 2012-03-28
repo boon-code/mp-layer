@@ -15,6 +15,7 @@ from PyQt4.QtGui import (QItemSelection, QMainWindow, QApplication,
                          QItemSelectionModel, qApp, QMessageBox)
 from PyQt4 import QtGui
 from gui import Ui_MPLayerGui
+from customqt import MyMainWindow
 from os.path import isdir, join
 import naming
 import download
@@ -142,7 +143,7 @@ class Controller(QObject):
     def __init__(self, dl_path=DL_PATH, store_file=STORAGE_PATH,
                  autostart=True):
         QObject.__init__(self)
-        self._gui = QMainWindow()
+        self._gui = MyMainWindow()
         self._autostart = autostart
         self._dlpath = dl_path
         self._store_file = store_file
@@ -189,6 +190,7 @@ class Controller(QObject):
         self._timer.timeout.connect(self._updateDlSelection)
         self.ui.pteUrl.pasteText.connect(self.ui.pteUrl.setPlainText)
         self.ui.pubMplayer.clicked.connect(self._playStream)
+        self.dlList.safeToExit.connect(self._gui.setEnableClose)
         qApp.aboutToQuit.connect(self._storeHistory)
     
     @pyqtSlot(bool)
