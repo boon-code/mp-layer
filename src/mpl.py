@@ -29,8 +29,11 @@ __version__ = '0.0.0'
 __docformat__ = "restructuredtext en"
 
 
+STORAGE_FILE = "mpl-storage.json"
+# default storage file name...
+
 DL_PATH = os.getcwd()
-STORAGE_PATH = join(os.getcwd(), "mpl-storage.json")
+STORAGE_PATH = join(os.getcwd(),STORAGE_FILE)
 
 
 class EpisodeController(QObject):
@@ -347,16 +350,20 @@ class Controller(QObject):
     def show(self):
         self._gui.show()
 
+
 def main():
-    app = QApplication(sys.argv)
-    QtGui.qApp = app
-    c = Controller()
-    c.show()
-    ret = app.exec_()
-    del c
-    del app
-    sys.exit(ret)
-    
+    if len(sys.argv) >= 2:
+        path = sys.argv[1]
+        storepath = join(path, STORAGE_FILE)
+        app = QApplication(sys.argv)
+        QtGui.qApp = app
+        c = Controller(store_file=storepath)
+        c.setDLPath(path)
+        c.show()
+        ret = app.exec_()
+        del c
+        del app
+        sys.exit(ret)
 
 
 if __name__ == '__main__':
