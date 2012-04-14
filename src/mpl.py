@@ -25,7 +25,7 @@ _log = logging.getLogger(__name__)
 __author__ = 'Manuel Huber'
 __copyright__ = "Copyright (c) 2012 Manuel Huber."
 __license__ = 'GPLv2'
-__version__ = '0.0.0'
+__version__ = '0.0.1'
 __docformat__ = "restructuredtext en"
 
 
@@ -261,6 +261,7 @@ class Controller(QObject):
                     start = True
                     text = u"Download failed..."
                 else:
+                    catstream = True
                     text = u"Download successful!"
                 remove = True
             else:
@@ -345,7 +346,11 @@ class Controller(QObject):
         index = self._selDM.currentIndex()
         streamer = self.dlList.getStreamer(index)
         if streamer is not None:
-            streamer.playStream()
+            _log.debug("Trying to play %s" % str(streamer))
+            if (streamer.getStatus() & streamer.FIN_BIT):
+                streamer.playFile()
+            else:
+                streamer.playStream()
     
     def show(self):
         self._gui.show()

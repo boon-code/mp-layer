@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './qt4-layout/gui.ui'
 #
-# Created: Fri Mar 16 21:45:49 2012
+# Created: Sun Apr 15 00:43:31 2012
 #      by: PyQt4 UI code generator 4.7.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -91,6 +91,7 @@ class Ui_MPLayerGui(object):
         self.pubRemove.setObjectName("pubRemove")
         self.gridLayout_2.addWidget(self.pubRemove, 1, 0, 1, 1)
         self.pubMplayer = QtGui.QPushButton(self.grpDownloadArea)
+        self.pubMplayer.setEnabled(False)
         self.pubMplayer.setObjectName("pubMplayer")
         self.gridLayout_2.addWidget(self.pubMplayer, 1, 1, 1, 1)
         self.verticalLayout_5.addLayout(self.gridLayout_2)

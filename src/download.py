@@ -2,7 +2,7 @@ import logging
 import os
 import filetype
 from subprocess import Popen
-from os.path import join, isdir, exists, split, getsize
+from os.path import join, isdir, exists, split, getsize, splitext
 from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel, Qt,
                           QVariant, pyqtSlot, QProcess, QModelIndex)
 
@@ -10,7 +10,7 @@ from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel, Qt,
 __author__ = 'Manuel Huber'
 __copyright__ = "Copyright (c) 2012 Manuel Huber."
 __license__ = 'GPLv2'
-__version__ = '0.0.0'
+__version__ = '0.0.1'
 __docformat__ = "restructuredtext en"
 
 
@@ -58,6 +58,7 @@ class DownloadInfo(QObject):
         self.destDir = dest_dir
         self._url = url
         self._filename = filename
+        self._ext = None
     
     def getSourceURL(self):
         return self._url
@@ -65,8 +66,15 @@ class DownloadInfo(QObject):
     def getFilename(self):
         return self._filename
     
+    def setExtension(self, ext=None):
+        self._ext = ext
+    
     def getPath(self):
-        return join(self.destDir, self._filename)
+        if self._ext is None:
+            filename = self._filename
+        else:
+            filename = "%s.%s" % (self._filename, self._ext)
+        return join(self.destDir, filename)
 
 
 class DownloadList(QAbstractListModel):
@@ -111,6 +119,8 @@ class DownloadList(QAbstractListModel):
                 self._dllist.pop(idx)
                 self.reset()
                 streamer.discard()
+                self._streamerStatusChanged(0)
+                # TRICKY: force check if we could close the window...
     
     def kill(self, index):
         streamer = self.getStreamer(index)
@@ -204,12 +214,21 @@ class MPStreamer(QObject):
         self._proc.finished.connect(self._qprocessFinished)
         self._proc.stateChanged.connect(self._qprocessStateChanged)
     
+    def _exists(self, filename):
+        for i in os.listdir(self._info.destDir):
+            basename = splitext(i)[0]
+            if filename == basename:
+                return True
+        return False
+    
     def start(self, overwrite=False):
         # TODO: check if path exists and is accessible
         self._lerror = None
+        self._info.setExtension(None)
+        # remove extension
         if self._status & self.RUN_BIT:
             raise AlreadyRunningError(self._info.getPath())
-        elif exists(self._info.getPath()) and (not overwrite):
+        elif self._exists(self._info.getFilename()) and (not overwrite):
             raise FileExistsError(self._info.getPath())
         else:
             if self._status & self.FIN_BIT:
@@ -267,19 +286,31 @@ class MPStreamer(QObject):
                 _log.critical("External program to guess ext. failed!")
                 self._status = self._FINISHED_ERR
             else:
-                _log.debug("Renaming '%s' to '%s'."
-                           % (path, path + "." + ext))
-                os.rename(path, path + "." + ext)
+                newpath = "%s.%s" % (path, ext)
+                _log.debug("Renaming '%s' to '%s'." % (path, newpath))
+                os.rename(path, newpath)
+                self._info.setExtension(ext)
                 succeeded = True
+                
         if self._status != old_status:
             self.changedStatus.emit(self._status)
         self._info.finished.emit(succeeded)
     
     def playStream(self, cat="cat"):
+        # TODO:
+        # maybe check QProcess::state() should be QProcess::NotRunning
+        _log.debug("Trying to start mplayer and play stream")
         self._cat_proc.setStandardOutputProcess(self._play_proc)
         self._cat_proc.start(cat, [self._info.getPath()])
-        self._play_proc.start("mplayer", ["-fs", "-"])
-
+        self._play_proc.start(self._mplayer, ["-fs", "-"])
+    
+    def playFile(self):
+        # TODO:
+        # maybe check QProcess::state() should be QProcess::NotRunning
+        _log.debug("Trying to start mplayer and play a file")
+        args = ["-fs", self._info.getPath()]
+        _log.debug("mplayer start argument: %s" % str(args))
+        self._play_proc.start(self._mplayer, args)
     
     def getSize(self, inc_unit=False):
         path = self._info.getPath()
