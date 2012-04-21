@@ -5,6 +5,7 @@ from subprocess import Popen
 from os.path import join, isdir, exists, split, getsize, splitext
 from PyQt4.QtCore import (QObject, pyqtSignal, QAbstractListModel, Qt,
                           QVariant, pyqtSlot, QProcess, QModelIndex)
+from PyQt4.QtGui import QColor, QBrush, QPixmap, QIcon
 
 
 __author__ = 'Manuel Huber'
@@ -87,6 +88,18 @@ class DownloadList(QAbstractListModel):
         self._dllist = list()
         self._idbypath = dict()
         self._safeToExit = True
+        pix = QPixmap(22, 22)
+        pix.fill(QColor(0, 0, 255, 255))
+        self._icon_run = QIcon(pix)
+        pix = QPixmap(22, 22)
+        pix.fill(QColor(255, 0, 0, 255))
+        self._icon_error = QIcon(pix)
+        pix = QPixmap(22, 22)
+        pix.fill(QColor(0, 255, 0, 255))
+        self._icon_fin = QIcon(pix)
+        pix = QPixmap(22, 22)
+        pix.fill(QColor(0, 0, 0, 255))
+        self._icon_wait = QIcon(pix)
     
     def add(self, dlinfo):
         name = dlinfo.getFilename()
@@ -103,8 +116,11 @@ class DownloadList(QAbstractListModel):
                 self._safeToExit = False
                 self.safeToExit.emit(False)
             # ---
-            self.reset()
-            return self.createIndex(idx, 0)
+            model_index = self.createIndex(idx, 0)
+            self.dataChanged.emit(model_index, model_index)
+            # This should be a better way to archive an update...
+            # self.reset()
+            return model_index
     
     def start(self, index, overwrite=False):
         streamer = self.getStreamer(index)
@@ -133,10 +149,23 @@ class DownloadList(QAbstractListModel):
             return self._dllist[index.row()]
     
     def data(self, index, role):
-        if index.isValid() and role == Qt.DisplayRole:
-            return QVariant(str(self._dllist[index.row()]))
-        else:
-            return QVariant()
+        if index.isValid():
+            if role == Qt.DisplayRole:
+                return QVariant(str(self._dllist[index.row()]))
+            elif role == Qt.DecorationRole:
+                # Added Decoration Role to indicate Status...
+                _log.debug("DecorationRole role %d" % index.row())
+                streamer = self._dllist[index.row()]
+                status = streamer.getStatus()
+                if status & streamer.ERROR_BIT:
+                    return QVariant(self._icon_error)
+                elif status & streamer.FIN_BIT:
+                    return QVariant(self._icon_fin)
+                elif status == streamer.RUN_BIT:
+                    return QVariant(self._icon_run)
+                else:
+                    return QVariant(self._icon_wait)
+        return QVariant()
     
     def rowCount(self, parent=QModelIndex()):
         return len(self._dllist)
@@ -150,6 +179,16 @@ class DownloadList(QAbstractListModel):
     @pyqtSlot(int)
     def _streamerStatusChanged(self, status):
         _log.debug("status-changed")
+        
+        # TRICKEY: test new color management...
+        length = len(self._dllist)
+        start_idx = self.createIndex(0, 0)
+        if length > 0:
+            end_idx = self.createIndex(length - 1, 0)
+        else:
+            end_idx = start_idx
+        self.dataChanged.emit(start_idx, end_idx)
+        #---
         oldsafe = self._safeToExit
         if oldsafe:
             if not (status & MPStreamer.FIN_BIT):
