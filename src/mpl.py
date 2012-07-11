@@ -25,7 +25,7 @@ _log = logging.getLogger(__name__)
 __author__ = 'Manuel Huber'
 __copyright__ = "Copyright (c) 2012 Manuel Huber."
 __license__ = 'GPLv2'
-__version__ = '0.0.1'
+__version__ = '0.9.0'
 __docformat__ = "restructuredtext en"
 
 
@@ -257,6 +257,9 @@ class Controller(QObject):
                 catstream = True
                 text = u"Download in progress..."
             elif status & streamer.FIN_BIT:
+                size = streamer.getSize(inc_unit=True)
+                if size is not None:
+                    size_str = u"Current size: %s" % size
                 if status & streamer.ERROR_BIT:
                     start = True
                     text = u"Download failed..."
