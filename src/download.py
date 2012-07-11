@@ -244,7 +244,7 @@ class MPStreamer(QObject):
         self._lerror = None
         self._doConnections()
         self._play_proc = QProcess()
-        self._cat_proc = QProcess()
+        self._stream_proc = QProcess()
     
     def __str__(self):
         return self._info.getFilename()
@@ -335,13 +335,12 @@ class MPStreamer(QObject):
             self.changedStatus.emit(self._status)
         self._info.finished.emit(succeeded)
     
-    def playStream(self, cat="cat"):
+    def playStream(self):
         # TODO:
         # maybe check QProcess::state() should be QProcess::NotRunning
         _log.debug("Trying to start mplayer and play stream")
-        self._cat_proc.setStandardOutputProcess(self._play_proc)
-        self._cat_proc.start(cat, [self._info.getPath()])
-        self._play_proc.start(self._mplayer, ["-fs", "-"])
+        self._stream_proc.setStandardInputFile(self._info.getPath())
+        self._stream_proc.start(self._mplayer, ["-fs", "-"])
     
     def playFile(self):
         # TODO:
