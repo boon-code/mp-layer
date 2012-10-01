@@ -83,8 +83,9 @@ class DownloadList(QAbstractListModel):
     invalidDLPath = pyqtSignal()
     safeToExit = pyqtSignal(bool)
     
-    def __init__(self):
+    def __init__(self, mplayerpgm='mplayer'):
         QAbstractListModel.__init__(self, None)
+        self._mplayer_path = mplayerpgm
         self._dllist = list()
         self._idbypath = dict()
         self._safeToExit = True

@@ -33,9 +33,10 @@ class ExtGuesser(object):
     _MFLV = "video/x-flv"
     _TFLV = "Macromedia Flash Video"
     
-    def __init__(self, path):
+    def __init__(self, path, filepgm='file'):
         self._path = path
         self._proc = QProcess()
+        self._file_pgm = filepgm
         if not exists(self._path):
             raise InvalidPathError(path)
     
@@ -51,10 +52,10 @@ class ExtGuesser(object):
             return 'unk'
     
     def get(self):
-        self._proc.start("file", ["-b", self._path])
+        self._proc.start(self._file_pgm, ["-b", self._path])
         ret0 = self._proc.waitForFinished()
         textual = str(self._proc.readAllStandardOutput())
-        self._proc.start("file", ["-bi", self._path])
+        self._proc.start(self._file_pgm, ["-bi", self._path])
         ret1 = self._proc.waitForFinished()
         mime = str(self._proc.readAllStandardOutput())
         if ret0 and ret1:

@@ -363,7 +363,7 @@ def main():
     if len(sys.argv) >= 2:
         path = sys.argv[1]
         storepath = join(path, STORAGE_FILE)
-        app = QApplication(sys.argv)
+        app = QApplication([])
         QtGui.qApp = app
         c = Controller(store_file=storepath)
         c.setDLPath(path)
