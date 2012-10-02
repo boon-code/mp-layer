@@ -9,7 +9,7 @@ _DEFAULT_LOG_FORMAT = "%(name)s : %(threadName)s : %(levelname)s \
 logging.basicConfig(stream=sys.stderr, format=_DEFAULT_LOG_FORMAT
      , level=logging.DEBUG)
 
-from PyQt4.QtCore import (QObject, SIGNAL, SLOT, pyqtSlot, 
+from PyQt4.QtCore import (QObject, SIGNAL, SLOT, pyqtSlot,
                           pyqtSignal, QString, QModelIndex, QTimer)
 from PyQt4.QtGui import (QItemSelection, QMainWindow, QApplication,
                          QItemSelectionModel, qApp, QMessageBox)
@@ -25,7 +25,7 @@ _log = logging.getLogger(__name__)
 __author__ = 'Manuel Huber'
 __copyright__ = "Copyright (c) 2012 Manuel Huber."
 __license__ = 'GPLv2'
-__version__ = '0.9.0'
+__version__ = '1.0.0'
 __docformat__ = "restructuredtext en"
 
 
@@ -213,7 +213,7 @@ class Controller(QObject):
     def _changedURL(self):
         """URL has been changed.
         
-        This slot checks if the url widget is empty, and 
+        This slot checks if the url widget is empty, and
         sends out a signal if the empty status changed since
         the last message.
         """
@@ -310,25 +310,26 @@ class Controller(QObject):
             self.dlList.remove(index)
     
     def _startSpecificStream(self, index):
+        wget = self.ui.chkWgetMode.isChecked()
         try:
-            self.dlList.start(index)
+            self.dlList.start(index, wget=wget)
         except download.FileExistsError as ex:
             reply = QMessageBox.question(self._gui, 'Overwrite?',
                     "File '%s' exists! Overwrite?" % ex.path,
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
-                self.dlList.start(index, overwrite=True)
+                self.dlList.start(index, overwrite=True, wget=wget)
             
     
     def download(self, dlinfo):
         """Add download to list (and eventually start it)
         
-        This method can be used to download 
+        This method can be used to download
         :param dlinfo: Download information for streamer.
         """
         dlinfo.destDir = self._dlpath
         index = self.dlList.add(dlinfo)
-        self._selDM.setCurrentIndex(index, 
+        self._selDM.setCurrentIndex(index,
                 QItemSelectionModel.SelectCurrent)
         if self._autostart:
             self._startSpecificStream(index)

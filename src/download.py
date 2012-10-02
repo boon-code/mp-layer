@@ -123,10 +123,10 @@ class DownloadList(QAbstractListModel):
             # self.reset()
             return model_index
     
-    def start(self, index, overwrite=False):
+    def start(self, index, overwrite=False, wget=None):
         streamer = self.getStreamer(index)
         if streamer is not None:
-            streamer.start(overwrite=overwrite)
+            streamer.start(overwrite=overwrite, wget=wget)
     
     def remove(self, index):
         streamer = self.getStreamer(index)
@@ -227,18 +227,21 @@ class MPStreamer(QObject):
         cls._current_id += 1
         return cid
     
-    def __init__(self, dlinfo, mp_path="mplayer", name="worker"):
+    def __init__(self, dlinfo, name="worker", mp_path="mplayer", wget="wget"):
         """Creates and initializes a new streamer object.
         
         :param dlinfo:  Download info container
-        :param mp_path: Optional path to the mplayer (used to download
-                        the stream).
         :param name:    Optional name of this streamer (This name
                         will be used in debug messages...).
+        :param mp_path: Optional path to the mplayer (used to download
+                        the stream).
+        :param wget:    Optional path to the wget utility (to download
+                        the stream).
         """
         QObject.__init__(self)
         self._info = dlinfo
         self._mplayer = mp_path
+        self._wget = wget
         self._name = "%s_%02d" % (name, self.nextId())
         self._proc = QProcess()
         self._status = self._READY
@@ -261,7 +264,7 @@ class MPStreamer(QObject):
                 return True
         return False
     
-    def start(self, overwrite=False):
+    def start(self, overwrite=False, wget=False):
         # TODO: check if path exists and is accessible
         self._lerror = None
         self._info.setExtension(None)
@@ -274,9 +277,17 @@ class MPStreamer(QObject):
             if self._status & self.FIN_BIT:
                 _log.debug("Restarting Download of file '%s'"
                            % self._info.getPath())
-            args = ["-nolirc", "-dumpstream", "-dumpfile",
-                    self._info.getPath(), self._info.getSourceURL()]
-            self._proc.start(self._mplayer, args)
+            if wget:
+                args = ["-c", self._info.getSourceURL(), "-O", self._info.getPath()]
+                _log.debug("Starting download using wget (%s)" % 
+                           " ".join(args))
+                self._proc.start(self._wget, args)
+            else:
+                args = ["-nolirc", "-dumpstream", "-dumpfile",
+                        self._info.getPath(), self._info.getSourceURL()]
+                _log.debug("Starting download using mplayer (%s)" % 
+                           " ".join(args))
+                self._proc.start(self._mplayer, args)
     
     def _qprocessStateChanged(self, new_state):
         old_status = self._status
