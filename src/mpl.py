@@ -9,10 +9,11 @@ _DEFAULT_LOG_FORMAT = "%(name)s : %(threadName)s : %(levelname)s \
 logging.basicConfig(stream=sys.stderr, format=_DEFAULT_LOG_FORMAT
      , level=logging.DEBUG)
 
-from PyQt4.QtCore import (QObject, SIGNAL, SLOT, pyqtSlot,
+from PyQt4.QtCore import (QObject, SIGNAL, SLOT, pyqtSlot, Qt,
                           pyqtSignal, QString, QModelIndex, QTimer)
 from PyQt4.QtGui import (QItemSelection, QMainWindow, QApplication,
-                         QItemSelectionModel, qApp, QMessageBox)
+                         QItemSelectionModel, qApp, QMessageBox,
+                         QSortFilterProxyModel, QCompleter)
 from PyQt4 import QtGui
 from gui import Ui_MPLayerGui
 from customqt import MyMainWindow
@@ -25,7 +26,7 @@ _log = logging.getLogger(__name__)
 __author__ = 'Manuel Huber'
 __copyright__ = "Copyright (c) 2012 Manuel Huber."
 __license__ = 'GPLv2'
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 __docformat__ = "restructuredtext en"
 
 
@@ -49,7 +50,17 @@ class EpisodeController(QObject):
         self._ui = controller.ui
         self._selModel = self._ui.lvSeries.selectionModel()
         self._ui.pubAddEpisode.setEnabled(False)
-    
+
+    def _select_item(self, index):
+        filtered_index = self._ctrl._filter_model.mapFromSource(index)
+        self._selModel.setCurrentIndex(filtered_index,
+                                       QItemSelectionModel.SelectCurrent)
+
+    def _src_index(self, index=None):
+        if index is None:
+            index = self._selModel.currentIndex()
+        return self._ctrl._filter_model.mapToSource(index)
+
     def doConnections(self):
         ui = self._ui
         ui.ledEName.textChanged.connect(self._changedEpisodeName)
@@ -67,7 +78,7 @@ class EpisodeController(QObject):
         :param sel:  New selection (can be invalid)
         :param desl: Old selection (can be invalid)
         """
-        series = self._nameStorage.get(sel)
+        series = self._nameStorage.get(self._src_index(sel))
         if series is not None:
             self._ui.ledEName.setText(series.name)
     
@@ -79,8 +90,7 @@ class EpisodeController(QObject):
         """
         ret, index = self._nameStorage.find(text)
         if ret:
-            self._selModel.setCurrentIndex(index,
-                            QItemSelectionModel.SelectCurrent)
+            self._select_item(index)
         else:
             self._selModel.clear()
         self._updateEpisodeControls()
@@ -90,7 +100,7 @@ class EpisodeController(QObject):
         
         :returns: True if episode is downloading else False.
         """
-        series = self._nameStorage.get(self._selModel.currentIndex())
+        series = self._nameStorage.get(self._src_index())
         if series is not None:
             season = self._ui.spnSeason.value()
             episode = self._ui.spnEpisode.value()
@@ -104,7 +114,7 @@ class EpisodeController(QObject):
         enabled = False
         ui = self._ui
         if not ui.ledEName.text().isEmpty():
-            series = self._nameStorage.get(self._selModel.currentIndex())
+            series = self._nameStorage.get(self._src_index())
             if series is not None:
                 season = ui.spnSeason.value()
                 episode = ui.spnEpisode.value()
@@ -124,9 +134,9 @@ class EpisodeController(QObject):
         name = self._ui.ledEName.text()
         if not name.isEmpty():
             index = self._nameStorage.getOrCreateSeries(name)
+            self._ctrl._updateList()
             series = self._nameStorage.get(index)
-            self._selModel.setCurrentIndex(index,
-                    QItemSelectionModel.SelectCurrent)
+            self._select_item(index)
             ui = self._ui
             season = ui.spnSeason.value()
             episode = ui.spnEpisode.value()
@@ -162,17 +172,30 @@ class Controller(QObject):
         self.ui.pubStart.setEnabled(False)
         self.ui.pubKill.setEnabled(False)
         self.ui.pubRemove.setEnabled(False)
-        #
-        self.ui.lvSeries.setModel(self.nameStorage)
+
+        self._filter_model = QSortFilterProxyModel()
+        self._filter_model.setSourceModel(self.nameStorage)
+        self.ui.lvSeries.setModel(self._filter_model)
         self._epiController = EpisodeController(self)
         self.ui.lvDownloads.setModel(self.dlList)
         self._selDM = self.ui.lvDownloads.selectionModel()
         self._doConnections()
         self._loadHistory()
-    
+        # completion
+        self._completer = QCompleter()
+        self._completer.setModel(self._filter_model)
+        self._completer.setCompletionMode(QCompleter.PopupCompletion)
+        self._completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self._completer.setCompletionRole(Qt.DisplayRole)
+        self.ui.ledEName.setCompleter(self._completer)
+
+    def _updateList(self):
+        self._filter_model.sort(0)
+
     def _loadHistory(self):
         try:
             self.nameStorage.load(self._store_file)
+            self._updateList()
         except IOError as ex:
             _log.info("Couldn't load history: '%s'" % str(ex))
     
