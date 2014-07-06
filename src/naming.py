@@ -21,24 +21,24 @@ class NamingException(Exception):
 
 
 class WrongJSOError(NamingException):
-    
+
     def __init__(self, name, wtype):
         self.name = name
         self.wtype = wtype
-    
+
     def __str__(self):
         return "JSO '%s' is of type '%s'" % (str(self.name),
                                              str(self.wtype))
 
 
 class SeriesInstance(DownloadInfo):
-    
+
     _TNAME = "%s.S%02dE%02d"
     _DBG_SUCCESS = "Download of file '%s' has been successful."
     _WRN_FAILURE = "Download of file '%s' has failed."
-    
+
     changedStatus = pyqtSignal()
-    
+
     def __init__(self, url, series, season, episode):
         filename = self._TNAME % (series.name, season, episode)
         DownloadInfo.__init__(self, url, filename)
@@ -47,10 +47,10 @@ class SeriesInstance(DownloadInfo):
         self.season = season
         self.finished.connect(self.hasFinished)
         self.removed.connect(self.removeInstance)
-    
+
     def getName(self):
         return self._series.name
-    
+
     @pyqtSlot('bool')
     def hasFinished(self, succeeded):
         if succeeded:
@@ -59,7 +59,7 @@ class SeriesInstance(DownloadInfo):
             _log.warning(self._WRN_FAILURE % self.getFilename())
         # Tell Series class about it (in either case)
         self._series.finishedInstance(self, succeeded)
-    
+
     @pyqtSlot()
     def removeInstance(self):
         _log.debug("Removed instance %s" % self.getFilename())
@@ -67,15 +67,15 @@ class SeriesInstance(DownloadInfo):
 
 
 class Series(QObject):
-    
+
     _WRN_LDSKIP = "Skipping season %d (series: '%s'); Illegal list format."
     _WRN_ILLSEASON = "Skipping illegal season value '%s'"
     _WRN_LAST = "Couldn't load last season, episode from '%s' \
 (found type '%s')."
     _DBG_SKIP = "Skipping cause of exception '%s'."
-    
+
     changedHistory = pyqtSignal()
-    
+
     def __init__(self, name, curr_season=1, curr_episode=0):
         QObject.__init__(self)
         self.name = name
@@ -87,7 +87,7 @@ class Series(QObject):
         #       an instance has been created to prevent multiple
         #       downloads of the same file...
         self._instances = set()
-    
+
     def createInstance(self, url, season, episode):
         season = int(season)
         episode = int(episode)
@@ -102,7 +102,7 @@ class Series(QObject):
         else:
             _log.info("'%s.S%02dE%02d' is being downloaded."
                       % (self.name, season, episode))
-    
+
     def finishedInstance(self, instance, succeeded):
         season = instance.season
         episode = instance.episode
@@ -113,18 +113,18 @@ class Series(QObject):
             if self.inHistory(season, episode):
                 self._removeFromHistory(season, episode)
         self.changedHistory.emit()
-    
+
     def removedInstance(self, instance):
         entry = (instance.season, instance.episode)
         self._instances.discard(entry)
         _log.debug("Removed S%02dE%02d from instance list." % entry)
         self.changedHistory.emit()
-    
+
     def _removeFromHistory(self, season, episode):
         if self.inHistory(season, episode):
             _log.info("Removing '%s.S%02dE%02d' from history!")
             self._history[season].remove(episode)
-    
+
     def _addToHistory(self, season, episode):
         _log.info("Adding episode %d of season %d (series: '%s')."
                   % (episode, season, self.name))
@@ -139,7 +139,7 @@ class Series(QObject):
             _log.debug("Adding '%s.S%02dE%02d' to history"
                        % (self.name, season, episode))
             self._history[season].add(episode)
-    
+
     def _tryLoadLast(self, obj):
         if 'last' in obj:
             if not isinstance(obj['last'], list):
@@ -154,7 +154,7 @@ class Series(QObject):
                                     type(last[1]))
             else:
                 return last
-    
+
     def _mergeHistory(self, history):
         for (season, epilist) in history.items():
             try:
@@ -179,7 +179,7 @@ class Series(QObject):
                            % (", ".join((str(i) for i in diff)),
                               season, self.name))
                 self._history[season].update(diff)
-    
+
     def inHistory(self, season, episode):
         season = int(season)
         episode = int(episode)
@@ -187,14 +187,14 @@ class Series(QObject):
             if episode in self._history[season]:
                 return True
         return False
-    
+
     def inProgress(self, season, episode):
         entry = (int(season), int(episode))
         if entry in self._instances:
             return True
         else:
             return False
-    
+
     def mergeData(self, data):
         try:
             last = self._tryLoadLast(data)
@@ -208,7 +208,7 @@ class Series(QObject):
                 raise WrongJSOError("%s.history" % self.name,
                                     type(history))
             self._mergeHistory(history)
-    
+
     def _normalizeHistory(self):
         rm_list = list()
         for (season, eps) in self._history.items():
@@ -216,13 +216,13 @@ class Series(QObject):
                 rm_list.append(season)
         for i in rm_list:
             self._history.pop(i, None)
-    
+
     def _createJsonHistoryObject(self):
         history = dict()
         for (season, episodes) in self._history.items():
             history[season] = tuple(episodes)
         return history
-    
+
     def getData(self):
         obj = dict()
         self._normalizeHistory()
@@ -232,14 +232,14 @@ class Series(QObject):
 
 
 class SeriesStorage(QAbstractListModel):
-    
+
     _WRN_SKIPENTRY = "Skipped entry because of '%s' (having type '%s')."
-    
+
     def __init__(self):
         QAbstractListModel.__init__(self, None)
         self._series = list()
         self._idbyname = dict()
-    
+
     def _addSeries(self, name):
         name = str(name)
         series = Series(name)
@@ -248,11 +248,11 @@ class SeriesStorage(QAbstractListModel):
         self._idbyname[name] = index
         self.reset()
         return index
-    
+
     def _loadFile(self, path):
         with open(path, 'r') as f:
             return json.load(f)
-    
+
     def load(self, path):
         jobj = self._loadFile(path)
         if not isinstance(jobj, dict):
@@ -263,7 +263,6 @@ class SeriesStorage(QAbstractListModel):
                     raise WrongJSOError("name", type(name))
                 if not isinstance(obj, dict):
                     raise WrongJSOError(name, type(obj))
-                
                 if name not in self._idbyname:
                     self._addSeries(name)
                 index = self._idbyname[name]
@@ -272,22 +271,22 @@ class SeriesStorage(QAbstractListModel):
             except WrongJSOError as ex:
                 _log.warning(self._WRN_SKIPENTRY % (str(ex.name),
                                                     str(ex.wtype)))
-    
+
     def _createJsonHistory(self):
         jobj = dict()
         for series in self._series:
             jobj[series.name] = series.getData()
         return jobj
-    
+
     def store(self, path):
         jobj = self._createJsonHistory()
         with open(path, 'w') as f:
             json.dump(jobj, f)
-    
+
     def get(self, index):
         if index.isValid():
             return self._series[index.row()]
-    
+
     def find(self, name):
         name = str(name)
         if name in self._idbyname:
@@ -296,7 +295,7 @@ class SeriesStorage(QAbstractListModel):
             return (True, index)
         else:
             return (False, None)
-    
+
     def getOrCreateSeries(self, name):
         name = unicode(name)
         if name in self._idbyname:
@@ -304,12 +303,12 @@ class SeriesStorage(QAbstractListModel):
         else:
             index = self._addSeries(name)
         return self.createIndex(index, 0)
-    
+
     def data(self, index, role):
         if index.isValid() and role == Qt.DisplayRole:
             return QVariant(self._series[index.row()].name)
         else:
             return QVariant()
-    
+
     def rowCount(self, parent=QModelIndex()):
         return len(self._series)

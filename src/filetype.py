@@ -17,7 +17,7 @@ class FileTypeException(Exception):
 
 
 class InvalidPathError(FileTypeException):
-    
+
     def __init__(self, path):
         self.path = path
 
@@ -27,30 +27,30 @@ class ExternalProgramError(FileTypeException):
 
 
 class ExtGuesser(object):
-    
+
     _TAVI = "AVI"
     _MMP4 = "video/mp4"
     _MFLV = "video/x-flv"
     _TFLV = "Macromedia Flash Video"
-    
+
     def __init__(self, path, filepgm='file'):
         self._path = path
         self._proc = QProcess()
         self._file_pgm = filepgm
         if not exists(self._path):
             raise InvalidPathError(path)
-    
+
     def _guessExtension(self, text, mime):
         if text.find(self._TAVI) >= 0:
             return 'avi'
         elif mime.find(self._MMP4) >= 0:
             return 'mp4'
-        elif ((mime.find(self._MFLV) >= 0) and 
+        elif ((mime.find(self._MFLV) >= 0) and
               (text.find(self._TFLV) >= 0)):
             return 'flv'
         else:
             return 'unk'
-    
+
     def get(self):
         self._proc.start(self._file_pgm, ["-b", self._path])
         ret0 = self._proc.waitForFinished()

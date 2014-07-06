@@ -38,10 +38,10 @@ STORAGE_PATH = join(os.getcwd(),STORAGE_FILE)
 
 
 class EpisodeController(QObject):
-    
+
     nextEpisode = pyqtSignal(int)
     currentSeason = pyqtSignal(int)
-    
+
     def __init__(self, controller):
         QObject.__init__(self)
         self._ctrl = controller
@@ -70,22 +70,22 @@ class EpisodeController(QObject):
         ui.pubAddEpisode.clicked.connect(self.addEpisode)
         model = self._selModel
         model.currentChanged.connect(self._selectedEpisodeChanged)
-    
+
     @pyqtSlot(QModelIndex, QModelIndex)
     def _selectedEpisodeChanged(self, sel, desl):
         """Slot will be called if selected index changes...
-        
+
         :param sel:  New selection (can be invalid)
         :param desl: Old selection (can be invalid)
         """
         series = self._nameStorage.get(self._src_index(sel))
         if series is not None:
             self._ui.ledEName.setText(series.name)
-    
+
     @pyqtSlot(QString)
     def _changedEpisodeName(self, text):
         """Slot will be called if new episode name has been typed in.
-        
+
         :param text: new text.
         """
         ret, index = self._nameStorage.find(text)
@@ -94,10 +94,10 @@ class EpisodeController(QObject):
         else:
             self._selModel.clear()
         self._updateEpisodeControls()
-    
+
     def _isEpisodeInProgress(self):
         """Checks if current episode is being downloaded.
-        
+
         :returns: True if episode is downloading else False.
         """
         series = self._nameStorage.get(self._src_index())
@@ -107,7 +107,7 @@ class EpisodeController(QObject):
             return series.inProgress(season, episode)
         else:
             return False
-    
+
     @pyqtSlot()
     def _updateEpisodeControls(self):
         text = u""
@@ -128,7 +128,7 @@ class EpisodeController(QObject):
         if self._ui.pubAddEpisode.isEnabled != enabled:
             self._ui.pubAddEpisode.setEnabled(enabled)
         ui.labEInstance.setText(text)
-    
+
     @pyqtSlot()
     def addEpisode(self):
         name = self._ui.ledEName.text()
@@ -150,9 +150,9 @@ class EpisodeController(QObject):
 
 
 class Controller(QObject):
-    
+
     changedURL = pyqtSignal()
-    
+
     def __init__(self, dl_path=DL_PATH, store_file=STORAGE_PATH,
                  autostart=True):
         QObject.__init__(self)
@@ -198,11 +198,11 @@ class Controller(QObject):
             self._updateList()
         except IOError as ex:
             _log.info("Couldn't load history: '%s'" % str(ex))
-    
+
     @pyqtSlot()
     def _storeHistory(self):
         self.nameStorage.store(self._store_file)
-    
+
     def _doConnections(self):
         self.ui.pteUrl.textChanged.connect(self._changedURL)
         self.ui.ledMName.textChanged.connect(self._updateSimpleButton)
@@ -218,11 +218,11 @@ class Controller(QObject):
         self.ui.pubMplayer.clicked.connect(self._playStream)
         self.dlList.safeToExit.connect(self._gui.setEnableClose)
         qApp.aboutToQuit.connect(self._storeHistory)
-    
+
     @pyqtSlot(bool)
     def setAutostart(self, autostart):
         self._autostart = autostart
-    
+
     @pyqtSlot(QString)
     def setDLPath(self, path):
         path = str(path)
@@ -231,11 +231,11 @@ class Controller(QObject):
             _log.debug("Setting Download Path to '%s'." % path)
         else:
             _log.warning("'%s' isn't a directory" % path)
-    
+
     @pyqtSlot()
     def _changedURL(self):
         """URL has been changed.
-        
+
         This slot checks if the url widget is empty, and
         sends out a signal if the empty status changed since
         the last message.
@@ -247,11 +247,11 @@ class Controller(QObject):
         elif (not url_empty) and (not self.valid_url):
             self.valid_url = True
             self.changedURL.emit()
-    
+
     @pyqtSlot()
     def _updateSimpleButton(self):
         """This slot checks if simple download button should be enabled.
-        
+
         This slot reads the valid_url member and checks the current
         status (empty?) of the LineEdit ledMName.
         """
@@ -260,7 +260,7 @@ class Controller(QObject):
             enabled = True
         if self.ui.pubAddSimple.isEnabled != enabled:
             self.ui.pubAddSimple.setEnabled(enabled)
-    
+
     def _updateDlSelection(self):
         start = False
         kill = False
@@ -300,7 +300,7 @@ class Controller(QObject):
         self.ui.pubMplayer.setEnabled(catstream)
         self.ui.labStatus.setText(text)
         self.ui.labSize.setText(size_str)
-    
+
     @pyqtSlot(QModelIndex, QModelIndex)
     def _selectedDLChanged(self, sel, desl):
         streamer = self.dlList.getStreamer(sel)
@@ -310,19 +310,19 @@ class Controller(QObject):
         else:
             self._timer.stop()
         self._updateDlSelection()
-    
+
     @pyqtSlot()
     def _startDownload(self):
         index = self._selDM.currentIndex()
         self._startSpecificStream(index)
-    
+
     @pyqtSlot()
     def _killDownload(self):
         index = self._selDM.currentIndex()
         streamer = self.dlList.getStreamer(index)
         if streamer is not None:
             streamer.kill()
-    
+
     @pyqtSlot()
     def _removeDownload(self):
         index = self._selDM.currentIndex()
@@ -331,7 +331,7 @@ class Controller(QObject):
             streamer.changedStatus.disconnect(self._updateDlSelection)
             self._selDM.clear()
             self.dlList.remove(index)
-    
+
     def _startSpecificStream(self, index):
         wget = self.ui.chkWgetMode.isChecked()
         try:
@@ -342,11 +342,10 @@ class Controller(QObject):
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
                 self.dlList.start(index, overwrite=True, wget=wget)
-            
-    
+
     def download(self, dlinfo):
         """Add download to list (and eventually start it)
-        
+
         This method can be used to download
         :param dlinfo: Download information for streamer.
         """
@@ -356,18 +355,18 @@ class Controller(QObject):
                 QItemSelectionModel.SelectCurrent)
         if self._autostart:
             self._startSpecificStream(index)
-    
+
     @pyqtSlot()
     def _addSimple(self):
         """Called if a simple download has been enqueued.
-        
+
         """
         if self.valid_url and not self.ui.ledMName.text().isEmpty():
             url = str(self.ui.pteUrl.toPlainText())
             name = str(self.ui.ledMName.text())
             dlinfo = download.DownloadInfo(url, name, self._dlpath)
             self.download(dlinfo)
-    
+
     @pyqtSlot()
     def _playStream(self):
         index = self._selDM.currentIndex()
@@ -378,7 +377,7 @@ class Controller(QObject):
                 streamer.playFile()
             else:
                 streamer.playStream()
-    
+
     def show(self):
         self._gui.show()
 

@@ -12,15 +12,15 @@ __docformat__ = "restructuredtext en"
 
 
 class UrlEdit(QPlainTextEdit):
-    
+
     pasteText = pyqtSignal(QString)
-    
+
     def __init__(self, parent=None):
         QPlainTextEdit.__init__(self, parent)
         self._clipboard = QApplication.clipboard()
-    
+
     def event(self, event):
-        if ((event.type() == QEvent.KeyPress) and 
+        if ((event.type() == QEvent.KeyPress) and
                     (event.key() == Qt.Key_V) and
                     (event.modifiers() & Qt.CTRL)):
             self.pasteText.emit(self._clipboard.text())
@@ -30,15 +30,15 @@ class UrlEdit(QPlainTextEdit):
 
 
 class MyMainWindow(QMainWindow):
-    
+
     _log = logging.getLogger("%s.MyMainWindow" % __name__)
     _exitMessage = "There are unfinished streams in download queue, \
 really exit?"
-    
+
     def __init__(self, *args):
         QMainWindow.__init__(self, *args)
         self._close = True
-    
+
     @pyqtSlot(bool)
     def setEnableClose(self, value):
         if value:
@@ -47,7 +47,7 @@ really exit?"
         else:
             self._log.debug("Disable closing...")
             self._close = False
-    
+
     def closeEvent(self, event):
         if self._close:
             self._log.debug("Closing main window...")
