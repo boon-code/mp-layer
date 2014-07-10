@@ -87,7 +87,6 @@ class DownloadList(QAbstractListModel):
         self._mplayer_path = mplayerpgm
         self._dllist = list()
         self._idbypath = dict()
-        self._safeToExit = True
         pix = QPixmap(22, 22)
         pix.fill(QColor(0, 0, 255, 255))
         self._icon_run = QIcon(pix)
@@ -110,12 +109,7 @@ class DownloadList(QAbstractListModel):
             self._dllist.append(streamer)
             idx = self._dllist.index(streamer)
             self._idbypath[name] = idx
-            # Added safe to exit feature...
             streamer.changedStatus.connect(self._streamerStatusChanged)
-            if self._safeToExit:
-                self._safeToExit = False
-                self.safeToExit.emit(False)
-            # ---
             model_index = self.createIndex(idx, 0)
             self.dataChanged.emit(model_index, model_index)
             # This should be a better way to archive an update...
@@ -170,7 +164,7 @@ class DownloadList(QAbstractListModel):
     def rowCount(self, parent=QModelIndex()):
         return len(self._dllist)
 
-    def _getExitStatus(self):
+    def isSafeToExit(self):
         for streamer in self._dllist:
             if not (streamer.getStatus() & streamer.FIN_BIT):
                 return False
@@ -187,15 +181,6 @@ class DownloadList(QAbstractListModel):
         else:
             end_idx = start_idx
         self.dataChanged.emit(start_idx, end_idx)
-        #---
-        oldsafe = self._safeToExit
-        if oldsafe:
-            if not (status & MPStreamer.FIN_BIT):
-                self._safeToExit = False
-        else:
-            self._safeToExit = self._getExitStatus()
-        if oldsafe != self._safeToExit:
-            self.safeToExit.emit(self._safeToExit)
 
 
 class MPStreamer(QObject):
