@@ -2,6 +2,7 @@
 
 import sys
 import os
+import optparse
 import logging
 
 _DEFAULT_LOG_FORMAT = "%(name)s : %(threadName)s : %(levelname)s \
@@ -18,6 +19,7 @@ from PyQt4 import QtGui
 from gui import Ui_MPLayerGui
 from customqt import MyMainWindow
 from os.path import isdir, join
+from datetime import datetime
 import naming
 import download
 
@@ -382,9 +384,32 @@ class Controller(QObject):
         self._gui.show()
 
 
-def main():
-    if len(sys.argv) >= 2:
-        path = sys.argv[1]
+def main(argv):
+    parser = optparse.OptionParser(
+        usage="usage: %prog [options] <settings_file>",
+        version=("%prog " + __version__)
+    )
+    parser.add_option("--verbose", action="store_const", const=logging.DEBUG,
+        dest="verb_level", help="Verbose output (DEBUG)"
+    )
+    parser.add_option("--quiet",
+                      action="store_const",
+                      const=logging.ERROR,
+                      dest="verb_level",
+                      help="Non verbose output: only output errors"
+    )
+    parser.set_defaults(version=False, verb_level=logging.INFO)
+
+    options, args = parser.parse_args(argv)
+
+    logging.root.setLevel(options.verb_level)
+    logging.debug("Starting up '%s' (%s)" % (
+        os.path.basename(sys.argv[0]),
+        datetime.now().isoformat())
+    )
+
+    if len(args) == 1:
+        path = args[0]
         storepath = join(path, STORAGE_FILE)
         app = QApplication([])
         QtGui.qApp = app
@@ -398,4 +423,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
