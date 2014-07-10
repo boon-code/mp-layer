@@ -11,7 +11,6 @@ from PyQt4.QtGui import QColor, QBrush, QPixmap, QIcon
 __author__ = 'Manuel Huber'
 __copyright__ = "Copyright (c) 2012 Manuel Huber."
 __license__ = 'GPLv2'
-__version__ = '0.0.1'
 __docformat__ = "restructuredtext en"
 
 

@@ -5,7 +5,6 @@ from PyQt4.QtCore import (QObject, pyqtSlot, pyqtSignal, QProcess, Qt)
 __author__ = 'Manuel Huber'
 __copyright__ = "Copyright (c) 2012 Manuel Huber."
 __license__ = 'GPLv2'
-__version__ = '0.0.0'
 __docformat__ = "restructuredtext en"
 
 
