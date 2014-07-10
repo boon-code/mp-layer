@@ -181,6 +181,7 @@ class Controller(QObject):
         self._epiController = EpisodeController(self)
         self.ui.lvDownloads.setModel(self.dlList)
         self._selDM = self.ui.lvDownloads.selectionModel()
+        self._gui.setExitChecker(self._isSafeToExit)
         self._doConnections()
         self._loadHistory()
         # completion
@@ -190,6 +191,9 @@ class Controller(QObject):
         self._completer.setCaseSensitivity(Qt.CaseInsensitive)
         self._completer.setCompletionRole(Qt.DisplayRole)
         self.ui.ledEName.setCompleter(self._completer)
+
+    def _isSafeToExit(self):
+        return self.dlList.isSafeToExit()
 
     def _updateList(self):
         self._filter_model.sort(0)
@@ -218,7 +222,6 @@ class Controller(QObject):
         self._timer.timeout.connect(self._updateDlSelection)
         self.ui.pteUrl.pasteText.connect(self.ui.pteUrl.setPlainText)
         self.ui.pubMplayer.clicked.connect(self._playStream)
-        self.dlList.safeToExit.connect(self._gui.setEnableClose)
         qApp.aboutToQuit.connect(self._storeHistory)
 
     @pyqtSlot(bool)
