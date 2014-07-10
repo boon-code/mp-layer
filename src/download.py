@@ -173,7 +173,7 @@ class DownloadList(QAbstractListModel):
     @pyqtSlot(int)
     def _streamerStatusChanged(self, status):
         _log.debug("status-changed")
-        # TRICKEY: test new color management...
+        # TRICKY: test new color management...
         length = len(self._dllist)
         start_idx = self.createIndex(0, 0)
         if length > 0:
