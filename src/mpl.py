@@ -161,11 +161,10 @@ class Controller(QObject):
         self._gui = MyMainWindow()
         self._autostart = autostart
         self._dlpath = dl_path
-        self._store_file = store_file
         self.ui = Ui_MPLayerGui()
         self.ui.setupUi(self._gui)
         self.dlList = download.DownloadList()
-        self.nameStorage = naming.SeriesStorage()
+        self.nameStorage = naming.SeriesStorage(store_file)
         self.valid_url = False
         self._timer = QTimer()
         self._timeout = 500
@@ -193,21 +192,21 @@ class Controller(QObject):
         self.ui.ledEName.setCompleter(self._completer)
 
     def _isSafeToExit(self):
-        return self.dlList.isSafeToExit()
+        return (self.dlList.isSafeToExit() and self.nameStorage.safeToExit)
 
     def _updateList(self):
         self._filter_model.sort(0)
 
     def _loadHistory(self):
         try:
-            self.nameStorage.load(self._store_file)
+            self.nameStorage.load()
             self._updateList()
         except IOError as ex:
             _log.info("Couldn't load history: '%s'" % str(ex))
 
     @pyqtSlot()
     def _storeHistory(self):
-        self.nameStorage.store(self._store_file)
+        self.nameStorage.store()
 
     def _doConnections(self):
         self.ui.pteUrl.textChanged.connect(self._changedURL)

@@ -234,14 +234,22 @@ class SeriesStorage(QAbstractListModel):
 
     _WRN_SKIPENTRY = "Skipped entry because of '%s' (having type '%s')."
 
-    def __init__(self):
+    def __init__(self, storage_file):
+        """Creates a series storage object
+
+        :param storage_file: The default file where to store the JSON
+                             represenation of this object.
+        """
         QAbstractListModel.__init__(self, None)
         self._series = list()
         self._idbyname = dict()
+        self.safeToExit = True
+        self._def_path = storage_file
 
     def _addSeries(self, name):
         name = str(name)
         series = Series(name)
+        series.changedHistory.connect(self._history_changed)
         self._series.append(series)
         index = self._series.index(series)
         self._idbyname[name] = index
@@ -252,7 +260,9 @@ class SeriesStorage(QAbstractListModel):
         with open(path, 'r') as f:
             return json.load(f)
 
-    def load(self, path):
+    def load(self, path=None):
+        if path is None:
+            path = self._def_path
         jobj = self._loadFile(path)
         if not isinstance(jobj, dict):
             raise WrongJSOError("root", type(jobj))
@@ -271,16 +281,25 @@ class SeriesStorage(QAbstractListModel):
                 _log.warning(self._WRN_SKIPENTRY % (str(ex.name),
                                                     str(ex.wtype)))
 
-    def _createJsonHistory(self):
-        jobj = dict()
-        for series in self._series:
-            jobj[series.name] = series.getData()
-        return jobj
+    @pyqtSlot()
+    def _history_changed(self):
+        _log.debug("Series storage history changed!")
+        self.safeToExit = False
 
-    def store(self, path):
-        jobj = self._createJsonHistory()
+    def store(self, path=None, override=False):
+        if path is None:
+            path = self._def_path
+        if override:
+            jobj = dict()
+        else:
+            jobj = self._loadFile(path)
+        for series in self._series:
+            # TODO: maybe add member to mark unmodified entries (they should
+            #       be reloaded from file)
+            jobj[series.name] = series.getData()
         with open(path, 'w') as f:
             json.dump(jobj, f)
+        self.safeToExit = True
 
     def get(self, index):
         if index.isValid():
