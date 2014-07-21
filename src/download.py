@@ -273,14 +273,39 @@ class MPStreamer(QObject):
                            " ".join(args))
                 self._proc.start(self._mplayer, args)
 
+    def _decode_state (self, state):
+        """Helper function to decode numeric state
+
+        :param state: Numeric state to decode
+        :return: Textual state string
+
+        This function is used for verbose debugging messages.
+        """
+        tokens = []
+        if state & self.RUN_BIT:
+            tokens.append("run")
+        if state & self.ERROR_BIT:
+            tokens.append("error")
+        if state & self.FIN_BIT:
+            tokens.append("fin")
+        if len(tokens) == 0:
+            return "none"
+        else:
+            return " | ".join(tokens)
+
     def _qprocessStateChanged(self, new_state):
         old_status = self._status
         _log.info("QProcess::stateChanged '%s'" % str(new_state))
         if new_state != QProcess.NotRunning:
             self._status = self._RUNNING
+            _log.debug("QProcess is running!")
         else:
             self._status &= ~(self.RUN_BIT)
+            _log.debug("QProcess has stopped!")
         if old_status != self._status:
+            _log.debug("Emit status change from '%s' to '%s'" %
+                       (self._decode_state(old_status),
+                        self._decode_state(self._status)))
             self.changedStatus.emit(self._status)
 
     def _receivedProcessErrorMsg(self):

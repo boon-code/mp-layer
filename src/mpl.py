@@ -192,7 +192,11 @@ class Controller(QObject):
         self.ui.ledEName.setCompleter(self._completer)
 
     def _isSafeToExit(self):
-        return (self.dlList.isSafeToExit() and self.nameStorage.safeToExit)
+        dl_safe = self.dlList.isSafeToExit()
+        na_safe = self.nameStorage.safeToExit
+        _log.debug("safe to exit: download-queue: %d, name-storage: %d" %
+                   (dl_safe, na_safe))
+        return (dl_safe and na_safe)
 
     def _updateList(self):
         self._filter_model.sort(0)
