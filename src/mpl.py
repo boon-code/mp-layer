@@ -192,6 +192,8 @@ class Controller(QObject):
         self.ui.ledEName.setCompleter(self._completer)
 
     def _isSafeToExit(self):
+        # TRICKY: save history now!
+        self.nameStorage.store()
         dl_safe = self.dlList.isSafeToExit()
         na_safe = self.nameStorage.safeToExit
         _log.debug("safe to exit: download-queue: %d, name-storage: %d" %
@@ -210,6 +212,9 @@ class Controller(QObject):
 
     @pyqtSlot()
     def _storeHistory(self):
+        # TRICKY: Keep this, although history will be saved in
+        #         _isSafeToExit function (which is called by
+        #         customqt.MyMainWindow).
         self.nameStorage.store()
 
     def _doConnections(self):
