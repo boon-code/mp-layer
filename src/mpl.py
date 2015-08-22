@@ -29,7 +29,7 @@ _log = logging.getLogger(__name__)
 __author__ = 'Manuel Huber'
 __copyright__ = "Copyright (c) 2012 Manuel Huber."
 __license__ = 'GPLv2'
-__version__ = '1.1.1'
+__version__ = '1.2.0-dev'
 __docformat__ = "restructuredtext en"
 
 
