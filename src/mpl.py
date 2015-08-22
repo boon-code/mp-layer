@@ -2,6 +2,7 @@
 
 import sys
 import os
+import errno
 import optparse
 import logging
 
@@ -206,7 +207,18 @@ class Controller(QObject):
             self.nameStorage.load()
             self._updateList()
         except IOError as ex:
-            _log.info("Couldn't load history: '%s'" % str(ex))
+            if ex.errno == errno.ENOENT:
+                try:
+                    self.nameStorage.store(override=True)
+                    _log.debug("Created new storage file")
+                except Exception as e:
+                    _log.error("Failed to create history file: %s" % str(e))
+            else:
+                if ex.errno in errno.errorcodes:
+                    errtext = "errno=%s" % errno.errorcodes[ex.errno]
+                else:
+                    errtext = "errno=%d" % ex.errno
+                _log.error("Couldn't load history: '%s' (%s)" % (errtext, str(ex)))
 
     @pyqtSlot()
     def _storeHistory(self):
