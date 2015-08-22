@@ -12,15 +12,15 @@ __docformat__ = "restructuredtext en"
 
 
 class UrlEdit(QPlainTextEdit):
-    
+
     pasteText = pyqtSignal(QString)
-    
+
     def __init__(self, parent=None):
         QPlainTextEdit.__init__(self, parent)
         self._clipboard = QApplication.clipboard()
-    
+
     def event(self, event):
-        if ((event.type() == QEvent.KeyPress) and 
+        if ((event.type() == QEvent.KeyPress) and
                     (event.key() == Qt.Key_V) and
                     (event.modifiers() & Qt.CTRL)):
             self.pasteText.emit(self._clipboard.text())
@@ -30,26 +30,27 @@ class UrlEdit(QPlainTextEdit):
 
 
 class MyMainWindow(QMainWindow):
-    
+
     _log = logging.getLogger("%s.MyMainWindow" % __name__)
     _exitMessage = "There are unfinished streams in download queue, \
 really exit?"
-    
+
     def __init__(self, *args):
         QMainWindow.__init__(self, *args)
-        self._close = True
-    
-    @pyqtSlot(bool)
-    def setEnableClose(self, value):
-        if value:
-            self._log.debug("Enable closing...")
-            self._close = True
+        self._exit_check_func = None
+
+    def setExitChecker(self, exit_checker):
+        self._exit_check_func = exit_checker
+
+    def _safeToExit(self):
+        if callable(self._exit_check_func):
+            return self._exit_check_func()
         else:
-            self._log.debug("Disable closing...")
-            self._close = False
-    
+            self._log.warn("No exit checker has been set; exit allowed!")
+            return True
+
     def closeEvent(self, event):
-        if self._close:
+        if self._safeToExit():
             self._log.debug("Closing main window...")
             event.accept()
         else:
@@ -57,7 +58,7 @@ really exit?"
                     self._exitMessage, QMessageBox.Yes | QMessageBox.No,
                     QMessageBox.No)
             if reply == QMessageBox.Yes:
-                self._log.debug("Ignore unfinished streams and close...")
+                self._log.warn("Ignore unfinished streams and close...")
                 event.accept()
             else:
                 event.ignore()
